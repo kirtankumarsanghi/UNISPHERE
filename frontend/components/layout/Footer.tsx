@@ -1,0 +1,1 @@
+export const Footer = () => <footer className="border-t border-border py-8 text-center text-sm text-muted">CampusLens � 2026</footer>;

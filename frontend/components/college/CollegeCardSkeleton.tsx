@@ -1,0 +1,2 @@
+import { Skeleton } from "@/components/ui/Skeleton";
+export const CollegeCardSkeleton = () => <div className="rounded-2xl border border-border bg-surface p-4"><Skeleton className="h-28 w-full" /><Skeleton className="mt-4 h-4 w-3/4" /><Skeleton className="mt-2 h-3 w-1/2" /></div>;

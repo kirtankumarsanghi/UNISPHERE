@@ -1,0 +1,1 @@
+export function CompareTable(){ return null; }

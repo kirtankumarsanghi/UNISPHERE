@@ -1,0 +1,1 @@
+export function CompareHighlight({ children }: { children: React.ReactNode }){ return <>{children}</>; }
