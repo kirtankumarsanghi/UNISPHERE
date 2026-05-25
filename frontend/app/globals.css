@@ -36,3 +36,11 @@ main, header, footer {
   position: relative;
   z-index: 1;
 }
+
+a, button, input, select {
+  @apply transition-all duration-200;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.5px;
+}

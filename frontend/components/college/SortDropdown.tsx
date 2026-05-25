@@ -18,10 +18,11 @@ export function SortDropdown() {
       }}
       className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
     >
-      <option value="rating_desc">Rating (High?Low)</option>
-      <option value="fees_asc">Fees (Low?High)</option>
-      <option value="placement_desc">Avg Package (High?Low)</option>
-      <option value="name_asc">Name (A?Z)</option>
+      <option value="rating_desc">Highest Rating</option>
+      <option value="fees_asc">Lowest Fees</option>
+      <option value="placement_desc">Highest Package</option>
+      <option value="name_asc">Alphabetical</option>
+      <option value="popular_desc">Most Popular</option>
     </select>
   );
 }
