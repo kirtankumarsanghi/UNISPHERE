@@ -1,5 +1,5 @@
 "use client";
-import { Heart, MapPin } from "lucide-react";
+import { Heart, MapPin, Scale } from "lucide-react";
 import Link from "next/link";
 import { formatFees, formatPackage } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
@@ -15,11 +15,12 @@ type CollegeCardProps = {
     abbreviation: string;
     city: string;
     state: string;
+    type?: string;
     gradientFrom: string;
     gradientTo: string;
     annualFees: number;
     rating: number;
-    placements: { avgPackage: number; placementPercent: number } | null;
+    placements?: { avgPackage: number; placementPercent: number } | null;
   };
 };
 
@@ -43,5 +44,50 @@ export function CollegeCard({ college }: CollegeCardProps) {
     else push(result.saved ? "College saved" : "Removed from saved", "success");
   };
 
-  return <div className="rounded-2xl border border-border bg-surface transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"><div className="relative h-28 overflow-hidden rounded-t-2xl" style={{ background: `linear-gradient(135deg, ${college.gradientFrom}, ${college.gradientTo})` }} /><div className="p-4"><Link href={`/colleges/${college.slug}`} className="font-syne text-base font-bold tracking-tight">{college.name}</Link><div className="mt-1 flex items-center gap-1 text-xs text-muted"><MapPin size={12} />{college.city}, {college.state}</div><div className="my-3 grid grid-cols-3 gap-2 text-center text-xs"><div className="rounded-lg bg-surface2 p-2 text-blue-400">{formatFees(college.annualFees)}</div><div className="rounded-lg bg-surface2 p-2 text-blue-400">{formatPackage(college.placements?.avgPackage ?? 0)}</div><div className="rounded-lg bg-surface2 p-2 text-accent3">{college.placements?.placementPercent ?? 0}%</div></div><div className="flex items-center justify-between"><RatingPill rating={college.rating} /><button disabled={disabled} onClick={onCompare} className="rounded-lg border border-border bg-surface2 px-3 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50">{added ? "? Added" : "+ Compare"}</button></div><button aria-label="save" onClick={onSave} className="mt-3 inline-flex items-center gap-1 text-xs text-accent2"><Heart size={14} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save"}</button></div></div>;
+  return (
+    <article className="group rounded-2xl border border-border bg-surface transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
+      <header className="relative h-28 overflow-hidden rounded-t-2xl" style={{ background: `linear-gradient(135deg, ${college.gradientFrom}, ${college.gradientTo})` }}>
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90">
+          {college.type ?? "COLLEGE"}
+        </div>
+        <button aria-label="Save college" onClick={onSave} className="absolute right-3 top-3 rounded-full bg-black/30 p-1.5 text-white/90 transition-all duration-200 hover:bg-black/45">
+          <Heart size={14} fill={saved ? "#ff6584" : "none"} color={saved ? "#ff6584" : "currentColor"} />
+        </button>
+        <div className="absolute inset-0 grid place-items-center font-syne text-3xl font-extrabold tracking-tight text-white/15">{college.abbreviation}</div>
+      </header>
+      <div className="p-4">
+        <Link href={`/colleges/${college.slug}`} className="line-clamp-2 font-syne text-base font-bold tracking-tight">
+          {college.name}
+        </Link>
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted">
+          <MapPin size={12} />
+          {college.city}, {college.state}
+        </div>
+
+        <div className="my-3 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-surface2 p-2">
+            <p className="text-xs font-semibold text-blue-400">{formatFees(college.annualFees)}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted">Fees/yr</p>
+          </div>
+          <div className="rounded-lg bg-surface2 p-2">
+            <p className="text-xs font-semibold text-blue-400">{formatPackage(college.placements?.avgPackage ?? 0)}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted">Avg Pkg</p>
+          </div>
+          <div className="rounded-lg bg-surface2 p-2">
+            <p className="text-xs font-semibold text-accent3">{college.placements?.placementPercent ?? 0}%</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted">Placed</p>
+          </div>
+        </div>
+
+        <footer className="flex items-center justify-between">
+          <RatingPill rating={college.rating} />
+          <button disabled={disabled} onClick={onCompare} className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface2 px-3 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50">
+            <Scale size={12} />
+            {added ? "? Added" : "+ Compare"}
+          </button>
+        </footer>
+      </div>
+    </article>
+  );
 }
