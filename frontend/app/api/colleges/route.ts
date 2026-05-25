@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { collegesQuerySchema } from "@/lib/validators";
-import { fallbackColleges } from "@/lib/fallback-colleges";
+import { getFallbackColleges } from "@/lib/fallback-loader";
 
 const byContains = (v: string, q: string) => v.toLowerCase().includes(q.toLowerCase());
 
@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ colleges, total, page: safePage, totalPages: Math.ceil(total / safeLimit) });
   } catch {
+    const fallbackColleges = await getFallbackColleges();
     let data = fallbackColleges.filter((c) => {
       if (q && !(byContains(c.name, q) || byContains(c.location, q) || byContains(c.city, q) || byContains(c.state, q) || c.courses.some((x) => byContains(x.name, q)))) return false;
       if (type && c.type !== type) return false;

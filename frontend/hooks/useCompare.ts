@@ -7,6 +7,7 @@ type CompareCollege = { id: string; name: string; abbreviation: string };
 type CompareState = {
   compareIds: string[];
   compareColleges: CompareCollege[];
+  setCompare: (colleges: CompareCollege[]) => void;
   addToCompare: (college: CompareCollege) => { ok: boolean; message?: string };
   removeFromCompare: (id: string) => void;
   clearCompare: () => void;
@@ -18,6 +19,12 @@ export const useCompare = create<CompareState>()(
     (set, get) => ({
       compareIds: [],
       compareColleges: [],
+      setCompare: (colleges) => {
+        const unique = colleges
+          .filter((c, index, arr) => arr.findIndex((x) => x.id === c.id) === index)
+          .slice(0, 3);
+        set({ compareIds: unique.map((c) => c.id), compareColleges: unique });
+      },
       addToCompare: (college) => {
         const { compareIds, compareColleges } = get();
         if (compareIds.includes(college.id)) return { ok: true };

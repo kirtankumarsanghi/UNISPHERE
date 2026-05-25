@@ -3,30 +3,33 @@
 import Link from "next/link";
 import { Menu, X, LogOut, User, Bookmark } from "lucide-react";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-bg/85 backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/80 backdrop-blur-2xl">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent shadow-[0_8px_24px_rgba(108,99,255,0.45)]">
             <span className="font-syne text-sm font-extrabold text-white">U</span>
           </div>
-          <span className="font-syne text-xl font-extrabold tracking-tight text-text">
+          <span className="font-syne text-xl font-extrabold tracking-tight text-text sm:text-2xl">
             UNI<span className="text-accent">SPHERE</span>
           </span>
         </Link>
 
-        <div className="hidden items-center gap-6 text-sm md:flex">
-          <Link href="/" className="text-text transition-colors hover:text-accent">Explore</Link>
-          <Link href="/compare" className="text-text transition-colors hover:text-accent">Compare</Link>
-          <Link href="/predictor" className="text-accent transition-colors hover:text-accent3">Predictor</Link>
-          <Link href="/discussions" className="text-text transition-colors hover:text-accent">Q&A</Link>
-          <Link href="/saved" className="text-text transition-colors hover:text-accent">Saved</Link>
+        <div className="hidden items-center gap-2 text-sm md:flex">
+          <Link href="/" className={`rounded-lg px-3 py-1.5 ${isActive("/") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Explore</Link>
+          <Link href="/compare" className={`rounded-lg px-3 py-1.5 ${isActive("/compare") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Compare</Link>
+          <Link href="/predictor" className={`rounded-lg px-3 py-1.5 ${isActive("/predictor") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Predictor</Link>
+          <Link href="/discussions" className={`rounded-lg px-3 py-1.5 ${isActive("/discussions") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Q&A</Link>
+          <Link href="/saved" className={`rounded-lg px-3 py-1.5 ${isActive("/saved") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Saved</Link>
         </div>
 
         <div className="hidden items-center gap-2 md:flex">

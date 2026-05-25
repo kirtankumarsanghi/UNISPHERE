@@ -7,7 +7,7 @@ import { saveCollegeSchema } from "@/lib/validators";
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) return NextResponse.json([]);
 
     const saved = await prisma.savedCollege.findMany({ where: { userId: session.user.id }, select: { collegeId: true } });
     return NextResponse.json(saved.map((s) => s.collegeId));

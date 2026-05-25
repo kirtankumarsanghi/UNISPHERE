@@ -17,12 +17,28 @@ type College = {
 };
 
 export default function ComparePage() {
-  const { compareIds, clearCompare } = useCompare();
+  const { compareIds, clearCompare, setCompare } = useCompare();
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { data: session } = useSession();
   const { push } = useToast();
+
+  useEffect(() => {
+    const idsParam = new URLSearchParams(window.location.search).get("ids");
+    if (!idsParam || compareIds.length) return;
+
+    const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean).slice(0, 3);
+    if (!ids.length) return;
+
+    fetch(`/api/colleges/compare?ids=${ids.join(",")}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d: College[]) => {
+        const items = d.map((c) => ({ id: c.id, name: c.name, abbreviation: c.abbreviation }));
+        if (items.length) setCompare(items);
+      })
+      .catch(() => undefined);
+  }, [compareIds.length, setCompare]);
 
   useEffect(() => {
     if (!compareIds.length) { setColleges([]); return; }

@@ -59,7 +59,7 @@ export function DetailSidebar({ college }: Props) {
         </button>
         <button onClick={onCompare} disabled={compareIds.length >= 3 && !compared} className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition-all hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-50">
           <Scale size={15} />
-          {compared ? "✓ In Compare" : "Add to Compare"}
+          {compared ? "In Compare" : "Add to Compare"}
         </button>
         <button onClick={onShare} className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition-all hover:border-accent/40">
           <Share2 size={15} /> Share

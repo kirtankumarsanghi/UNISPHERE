@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCompare } from "@/hooks/useCompare";
 
 export function CompareTray() {
-  const { compareColleges, removeFromCompare } = useCompare();
+  const { compareColleges, compareIds, removeFromCompare } = useCompare();
   if (!compareColleges.length) return null;
 
   return (
@@ -21,7 +21,7 @@ export function CompareTray() {
             </span>
           ))}
         </div>
-        <Link href="/compare" className="inline-flex items-center gap-1 rounded-[8px] bg-accent px-4 py-2 text-sm font-semibold text-white">
+        <Link href={`/compare?ids=${compareIds.join(",")}`} className="inline-flex items-center gap-1 rounded-[8px] bg-accent px-4 py-2 text-sm font-semibold text-white">
           Compare Now <ArrowRight size={14} />
         </Link>
       </div>

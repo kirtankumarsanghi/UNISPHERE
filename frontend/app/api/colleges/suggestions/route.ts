@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { fallbackColleges } from "@/lib/fallback-colleges";
+import { getFallbackColleges } from "@/lib/fallback-loader";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json(colleges);
   } catch {
+    const fallbackColleges = await getFallbackColleges();
     const suggestions = fallbackColleges
       .filter((c) => [c.name, c.city, c.state, ...c.courses.map((x) => x.name)].some((t) => t.toLowerCase().includes(q.toLowerCase())))
       .slice(0, 8)

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Bookmark } from "lucide-react";
+import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CollegeCard } from "@/components/college/CollegeCard";
 import { useSaved } from "@/hooks/useSaved";
@@ -125,7 +126,7 @@ export default function SavedPage() {
                   <p className="mt-1 text-sm text-muted">{c.collegeIds.length} colleges compared</p>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <a href={`/compare?ids=${c.collegeIds.join(",")}`} className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">View Comparison</a>
+                  <Link href={`/compare?ids=${c.collegeIds.join(",")}`} className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">View Comparison</Link>
                 </div>
               </div>
             ))}

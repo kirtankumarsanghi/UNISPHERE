@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) return NextResponse.json([]);
 
     const saved = await prisma.savedComparison.findMany({
       where: { userId: session.user.id },

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { fallbackColleges } from "@/lib/fallback-colleges";
+import { getFallbackColleges } from "@/lib/fallback-loader";
+import type { FallbackCollege } from "@/lib/fallback-colleges";
 import { formatFees, formatPackage } from "@/lib/utils";
 import { CollegeHero } from "@/components/detail/CollegeHero";
 import { SubNav } from "@/components/detail/SubNav";
@@ -11,10 +12,13 @@ import { ReviewsTab } from "@/components/detail/ReviewsTab";
 import { DetailSidebar } from "@/components/detail/DetailSidebar";
 import { SimilarColleges } from "@/components/detail/SimilarColleges";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 type PageProps = { params: { slug: string } };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const fallbackColleges = await getFallbackColleges();
+
   try {
     const college = await prisma.college.findFirst({ where: { OR: [{ id: params.slug }, { slug: params.slug }] } });
     if (college) {
@@ -23,14 +27,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description: `Explore courses, placements & reviews for ${college.name}. ${college.overview.slice(0, 120)}`,
       };
     }
-  } catch {
-    const fallback = fallbackColleges.find((item) => item.slug === params.slug || item.id === params.slug);
-    if (fallback) {
-      return {
-        title: `${fallback.name} - Unisphere`,
-        description: `Explore courses, placements & reviews for ${fallback.name}.`,
-      };
-    }
+  } catch {}
+
+  const fallback = fallbackColleges.find((item) => item.slug === params.slug || item.id === params.slug);
+  if (fallback) {
+    return {
+      title: `${fallback.name} - Unisphere`,
+      description: `Explore courses, placements & reviews for ${fallback.name}.`,
+    };
   }
 
   return { title: "College - Unisphere" };
@@ -39,6 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CollegeDetail({ params }: PageProps) {
   let college: Awaited<ReturnType<typeof fetchCollege>> | ReturnType<typeof mapFallbackCollege> | null = null;
   let similarColleges: any[] = [];
+  const fallbackColleges = await getFallbackColleges();
+  const fallback = fallbackColleges.find((item) => item.slug === params.slug || item.id === params.slug);
 
   try {
     college = await fetchCollege(params.slug);
@@ -51,27 +57,15 @@ export default async function CollegeDetail({ params }: PageProps) {
       });
     }
   } catch {
-    const fallback = fallbackColleges.find((item) => item.slug === params.slug || item.id === params.slug);
-    if (fallback) {
-      college = mapFallbackCollege(fallback);
-      similarColleges = fallbackColleges
-        .filter((item) => item.type === fallback.type && item.slug !== fallback.slug)
-        .slice(0, 4)
-        .map((item) => ({
-          ...item,
-          overview: `${item.name} is a recognized institute with strong academics, student community, and placement support.`,
-          website: null,
-          reviews: [],
-          courses: item.courses.map((course, index) => ({
-            id: `${item.id}-course-${index}`,
-            name: course.name,
-            degree: course.degree,
-            duration: "4 years",
-            annualFees: item.annualFees,
-            totalSeats: 120,
-          })),
-        }));
-    }
+    // fallback handled below
+  }
+
+  if (!college && fallback) {
+    college = mapFallbackCollege(fallback);
+    similarColleges = fallbackColleges
+      .filter((item) => item.type === fallback.type && item.slug !== fallback.slug)
+      .slice(0, 4)
+      .map((item) => mapFallbackCollege(item));
   }
 
   if (!college) notFound();
@@ -86,9 +80,9 @@ export default async function CollegeDetail({ params }: PageProps) {
   return (
     <div>
       <nav className="mb-3 flex items-center gap-1 text-xs text-muted">
-        <a href="/" className="hover:text-accent">Home</a>
+        <Link href="/" className="hover:text-accent">Home</Link>
         <span>&gt;</span>
-        <a href="/?type=" className="hover:text-accent">Colleges</a>
+        <Link href="/" className="hover:text-accent">Colleges</Link>
         <span>&gt;</span>
         <span className="text-text">{college.name}</span>
       </nav>
@@ -133,9 +127,14 @@ async function fetchCollege(idOrSlug: string) {
   });
 }
 
-function mapFallbackCollege(college: (typeof fallbackColleges)[number]) {
+function mapFallbackCollege(college: FallbackCollege) {
   return {
     ...college,
+    placements: {
+      ...college.placements,
+      topRecruiters: [],
+      year: 2024,
+    },
     overview: `${college.name} is a recognized institute with strong academics, student community, and placement support.`,
     website: null,
     reviews: [],

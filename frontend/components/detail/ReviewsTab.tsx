@@ -17,7 +17,7 @@ export function ReviewsTab({ reviews }: { reviews: Review[] }) {
             <span className="font-syne text-base font-semibold text-text">{r.authorName}</span>
             {r.batch ? <span className="rounded-full border border-border bg-surface2 px-2 py-0.5">Batch {r.batch}</span> : null}
             {r.course ? <span className="rounded-full border border-border bg-surface2 px-2 py-0.5">{r.course}</span> : null}
-            <span className="rounded-full border border-accent3/40 bg-accent3/10 px-2 py-0.5 text-accent3">{r.rating.toFixed(1)}?</span>
+            <span className="rounded-full border border-accent3/40 bg-accent3/10 px-2 py-0.5 text-accent3">{r.rating.toFixed(1)}★</span>
           </div>
           <h4 className="mt-2 font-semibold">{r.title}</h4>
           <p className="mt-1 text-sm text-text/80">{r.content}</p>

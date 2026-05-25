@@ -1,4 +1,4 @@
-@tailwind base; /* trigger recompile */
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -20,6 +20,8 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   position: relative;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 body::before {
@@ -37,10 +39,35 @@ main, header, footer {
   z-index: 1;
 }
 
-a, button, input, select {
+a, button, input, select, textarea {
   @apply transition-all duration-200;
 }
 
 h1, h2, h3, h4 {
   letter-spacing: -0.5px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a4258 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #3a4258;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+input, select, button, a {
+  outline: none;
+}
+
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+  box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.4);
 }

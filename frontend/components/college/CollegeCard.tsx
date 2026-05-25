@@ -45,7 +45,7 @@ export function CollegeCard({ college }: CollegeCardProps) {
   };
 
   return (
-    <article className="group rounded-2xl border border-border bg-surface transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
+    <article className="group overflow-hidden rounded-2xl border border-border/80 bg-surface/95 transition-all duration-300 hover:-translate-y-1 hover:border-accent/45 hover:shadow-[0_20px_50px_rgba(4,8,20,0.55)]">
       <header className="relative h-28 overflow-hidden rounded-t-2xl" style={{ background: `linear-gradient(135deg, ${college.gradientFrom}, ${college.gradientTo})` }}>
         <div className="absolute inset-0 bg-black/10" />
         <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90">
@@ -56,7 +56,7 @@ export function CollegeCard({ college }: CollegeCardProps) {
         </button>
         <div className="absolute inset-0 grid place-items-center font-syne text-3xl font-extrabold tracking-tight text-white/15">{college.abbreviation}</div>
       </header>
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         <Link href={`/colleges/${college.slug}`} className="line-clamp-2 font-syne text-base font-bold tracking-tight">
           {college.name}
         </Link>
@@ -65,16 +65,16 @@ export function CollegeCard({ college }: CollegeCardProps) {
           {college.city}, {college.state}
         </div>
 
-        <div className="my-3 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg bg-surface2 p-2">
+        <div className="my-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
             <p className="text-xs font-semibold text-blue-400">{formatFees(college.annualFees)}</p>
             <p className="text-[10px] uppercase tracking-wider text-muted">Fees/yr</p>
           </div>
-          <div className="rounded-lg bg-surface2 p-2">
+          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
             <p className="text-xs font-semibold text-blue-400">{formatPackage(college.placements?.avgPackage ?? 0)}</p>
             <p className="text-[10px] uppercase tracking-wider text-muted">Avg Pkg</p>
           </div>
-          <div className="rounded-lg bg-surface2 p-2">
+          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
             <p className="text-xs font-semibold text-accent3">{college.placements?.placementPercent ?? 0}%</p>
             <p className="text-[10px] uppercase tracking-wider text-muted">Placed</p>
           </div>

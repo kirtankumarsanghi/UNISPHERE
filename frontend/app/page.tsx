@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { fallbackColleges } from "@/lib/fallback-colleges";
+import { getFallbackColleges } from "@/lib/fallback-loader";
 import { CollegeCard } from "@/components/college/CollegeCard";
 import { SearchBar } from "@/components/college/SearchBar";
 import { CompareTray } from "@/components/college/CompareTray";
@@ -88,6 +88,7 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
     ];
   } catch {
     fallback = true;
+    const fallbackColleges = await getFallbackColleges();
     let data = fallbackColleges.filter((c) => {
       if (q && !(byContains(c.name, q) || byContains(c.location, q) || byContains(c.city, q) || byContains(c.state, q) || c.courses.some((x) => byContains(x.name, q)))) return false;
       if (type && c.type !== type) return false;
@@ -125,19 +126,19 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div>
-      <section className="relative overflow-hidden py-20 text-center">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.22),transparent_55%)]" />
+    <div className="space-y-8 pb-16">
+      <section className="relative overflow-hidden rounded-3xl border border-border/70 bg-surface/40 px-4 py-14 text-center sm:px-8 sm:py-20">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.25),transparent_55%)]" />
         <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-accent3/35 bg-accent3/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-widest text-accent3">
           <span className="h-2 w-2 animate-pulse rounded-full bg-accent3" /> Discover your future, one campus at a time
         </div>
-        <h1 className="font-syne text-5xl font-extrabold tracking-tight sm:text-6xl">Find your perfect <span className="bg-gradient-to-r from-accent to-accent3 bg-clip-text text-transparent">college match</span></h1>
-        <p className="mx-auto mt-4 max-w-2xl text-muted">Search, filter, compare, and save colleges with real placement data and student insights.</p>
+        <h1 className="font-syne text-4xl font-extrabold tracking-tight sm:text-6xl">Find your perfect <span className="bg-gradient-to-r from-accent to-accent3 bg-clip-text text-transparent">college match</span></h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-muted sm:text-base">Search, filter, compare, and save colleges with real placement data and student insights.</p>
         <div className="mx-auto mt-8 max-w-2xl"><SearchBar defaultValue={q} /></div>
-        <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-xl border border-border bg-surface/60 p-3">
-              <div className="font-syne text-xl font-extrabold tracking-tight">{s.value}</div>
+            <div key={s.label} className="rounded-xl border border-border/80 bg-surface/70 p-3 shadow-[0_8px_24px_rgba(5,7,16,0.35)]">
+              <div className="font-syne text-xl font-extrabold tracking-tight sm:text-2xl">{s.value}</div>
               <div className="text-xs text-muted">{s.label}</div>
             </div>
           ))}
@@ -147,7 +148,7 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
       <section className="grid grid-cols-1 gap-6 md:grid-cols-[280px_1fr]">
         <div className="hidden md:block"><FilterSidebar /></div>
         <div>
-          <div className="mb-4 flex items-end justify-between">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="font-syne text-2xl font-bold tracking-tight">Colleges</h2>
               <p className="text-sm text-muted">{total} results {fallback ? "(offline data)" : ""}</p>
