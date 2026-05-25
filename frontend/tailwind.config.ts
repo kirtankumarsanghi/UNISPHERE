@@ -16,8 +16,8 @@ const config: Config = {
         text: "var(--text)"
       },
       fontFamily: {
-        syne: ["Syne", "sans-serif"],
-        sans: ["DM Sans", "sans-serif"]
+        syne: ["var(--font-syne)", "sans-serif"],
+        sans: ["var(--font-dm-sans)", "sans-serif"]
       }
     }
   },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { saveCollegeSchema } from "@/lib/validators";
 
 export async function GET() {
   try {
@@ -20,15 +21,12 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { collegeId } = await req.json();
-    if (!collegeId || typeof collegeId !== "string") {
-      return NextResponse.json({ error: "collegeId required" }, { status: 400 });
-    }
+    const parsed = saveCollegeSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "collegeId required" }, { status: 400 });
 
+    const { collegeId } = parsed.data;
     const college = await prisma.college.findUnique({ where: { id: collegeId }, select: { id: true } });
-    if (!college) {
-      return NextResponse.json({ error: "College not found" }, { status: 404 });
-    }
+    if (!college) return NextResponse.json({ error: "College not found" }, { status: 404 });
 
     const entry = await prisma.savedCollege.create({ data: { collegeId, userId: session.user.id } });
     return NextResponse.json(entry, { status: 201 });
@@ -45,11 +43,10 @@ export async function DELETE(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { collegeId } = await req.json();
-    if (!collegeId || typeof collegeId !== "string") {
-      return NextResponse.json({ error: "collegeId required" }, { status: 400 });
-    }
+    const parsed = saveCollegeSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "collegeId required" }, { status: 400 });
 
+    const { collegeId } = parsed.data;
     await prisma.savedCollege.delete({ where: { userId_collegeId: { userId: session.user.id, collegeId } } });
     return NextResponse.json({ ok: true });
   } catch (error) {

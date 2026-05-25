@@ -1,37 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { signupSchema } from "@/lib/validators";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "local";
+  const rate = enforceRateLimit(`signup:${ip}`, 8, 60_000);
+  if (!rate.ok) {
+    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  }
+
   try {
-    const body = await req.json();
-    const name = String(body?.name ?? "").trim();
-    const email = String(body?.email ?? "").trim().toLowerCase();
-    const password = String(body?.password ?? "");
-
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
+    const parsed = signupSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
     }
 
-    if (!EMAIL_RE.test(email)) {
-      return NextResponse.json({ error: "Invalid email format." }, { status: 400 });
-    }
+    const { name, email, password } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
-    }
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
-    }
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing) return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
 
     const hashed = await hash(password, 12);
-
     const user = await prisma.user.create({
-      data: { name, email, password: hashed },
+      data: { name: name.trim(), email: normalizedEmail, password: hashed },
       select: { id: true, name: true, email: true, createdAt: true }
     });
 

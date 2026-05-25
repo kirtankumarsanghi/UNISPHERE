@@ -51,7 +51,9 @@ export function FilterSidebar() {
       else params.delete(k);
     });
     params.delete("page");
-    router.push(`${pathname}?${params.toString()}`);
+    const base = pathname || "/";
+    const query = params.toString();
+    router.push(query ? `${base}?${query}` : base);
   };
 
   const clear = () => {
@@ -59,14 +61,16 @@ export function FilterSidebar() {
     ["type", "state", "city", "course", "degree", "minRating", "minPlacement", "minFees", "maxFees", "minYear", "maxNirf"].forEach((k) => params.delete(k));
     params.delete("page");
     setFilters({ type: "", state: "", city: "", course: "", degree: "", minRating: "", minPlacement: "", minFees: "", maxFees: "", minYear: "", maxNirf: "" });
-    router.push(`${pathname}?${params.toString()}`);
+    const base = pathname || "/";
+    const query = params.toString();
+    router.push(query ? `${base}?${query}` : base);
   };
 
   return (
     <aside className="sticky top-20 h-fit rounded-2xl border border-border bg-surface p-4">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">Filters</p>
-        <button onClick={clear} className="text-xs text-accent">Reset</button>
+        <button type="button" onClick={clear} className="text-xs text-accent">Reset</button>
       </div>
 
       <div className="space-y-3 text-sm">
@@ -108,7 +112,7 @@ export function FilterSidebar() {
         </div>
       </div>
 
-      <button onClick={apply} className="mt-4 w-full rounded-[8px] bg-accent px-4 py-2.5 font-semibold text-white">Apply Filters</button>
+      <button type="button" onClick={apply} className="mt-4 w-full rounded-[8px] bg-accent px-4 py-2.5 font-semibold text-white">Apply Filters</button>
     </aside>
   );
 }

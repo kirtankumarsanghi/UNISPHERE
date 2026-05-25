@@ -26,65 +26,112 @@ export default function SavedPage() {
   const [loading, setLoading] = useState(true);
   const savedIds = useSaved((s) => s.savedIds);
 
+  const [activeTab, setActiveTab] = useState<"colleges" | "comparisons">("colleges");
+  const [comparisons, setComparisons] = useState<{id: string; name: string; collegeIds: string[]}[]>([]);
+
   useEffect(() => {
     const run = async () => {
       setLoading(true);
-      const idsRes = await fetch("/api/saved");
-      if (!idsRes.ok) {
-        setLoading(false);
-        return;
-      }
+      try {
+        const [idsRes, compRes] = await Promise.all([
+          fetch("/api/saved"),
+          fetch("/api/saved-comparisons")
+        ]);
 
-      const ids: string[] = await idsRes.json();
-      if (!ids.length) {
-        setColleges([]);
-        setLoading(false);
-        return;
-      }
+        if (compRes.ok) {
+          setComparisons(await compRes.json());
+        }
 
-      const collegesRes = await fetch(`/api/colleges/compare?ids=${ids.join(",")}`);
-      const data: College[] = collegesRes.ok ? await collegesRes.json() : [];
-      setColleges(data);
-      setLoading(false);
+        if (idsRes.ok) {
+          const ids: string[] = await idsRes.json();
+          if (ids.length) {
+            const collegesRes = await fetch(`/api/colleges/compare?ids=${ids.join(",")}`);
+            if (collegesRes.ok) {
+              setColleges(await collegesRes.json());
+            }
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    run().catch(() => setLoading(false));
+    run();
   }, []);
 
-  const filtered = useMemo(() => colleges.filter((c) => savedIds.has(c.id)), [colleges, savedIds]);
+  const filtered = useMemo(() => colleges.filter((c) => savedIds.includes(c.id)), [colleges, savedIds]);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-64 animate-pulse rounded-2xl border border-border bg-surface" />
-        ))}
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-64 animate-pulse rounded-2xl border border-border bg-surface" />
+          ))}
+        </div>
       </div>
-    );
-  }
-
-  if (!filtered.length) {
-    return (
-      <EmptyState
-        icon={Bookmark}
-        title="No saved colleges yet"
-        description="Start exploring and save colleges you like"
-        action={{ label: "Explore Colleges ?", href: "/" }}
-      />
     );
   }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center gap-3">
-        <h1 className="font-syne text-3xl font-extrabold tracking-tight">Your Saved Colleges</h1>
-        <span className="rounded-full border border-border bg-surface2 px-3 py-1 text-xs text-muted">{filtered.length}</span>
+    <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="font-syne text-3xl font-extrabold tracking-tight">Your Dashboard</h1>
+        <div className="flex gap-2 rounded-xl bg-surface2 p-1">
+          <button
+            onClick={() => setActiveTab("colleges")}
+            className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${activeTab === "colleges" ? "bg-white text-text shadow-sm" : "text-muted hover:text-text"}`}
+          >
+            Saved Colleges
+          </button>
+          <button
+            onClick={() => setActiveTab("comparisons")}
+            className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${activeTab === "comparisons" ? "bg-white text-text shadow-sm" : "text-muted hover:text-text"}`}
+          >
+            Comparisons
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((college) => (
-          <CollegeCard key={college.id} college={college} />
-        ))}
-      </div>
+
+      {activeTab === "colleges" ? (
+        !filtered.length ? (
+          <EmptyState
+            icon={Bookmark}
+            title="No saved colleges yet"
+            description="Start exploring and save colleges you like"
+            action={{ label: "Explore Colleges", href: "/" }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((college) => (
+              <CollegeCard key={college.id} college={college} />
+            ))}
+          </div>
+        )
+      ) : (
+        !comparisons.length ? (
+          <EmptyState
+            icon={Bookmark}
+            title="No saved comparisons"
+            description="Use the compare tool to save match-ups"
+            action={{ label: "Compare Colleges", href: "/compare" }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {comparisons.map((c) => (
+              <div key={c.id} className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-5">
+                <div>
+                  <h3 className="font-syne text-lg font-bold">{c.name}</h3>
+                  <p className="mt-1 text-sm text-muted">{c.collegeIds.length} colleges compared</p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <a href={`/compare?ids=${c.collegeIds.join(",")}`} className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">View Comparison</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
     </div>
   );
 }

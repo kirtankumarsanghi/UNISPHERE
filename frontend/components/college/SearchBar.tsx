@@ -18,12 +18,19 @@ export function SearchBar({ defaultValue = "", placeholder = "Search by college,
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  const applySearch = (raw: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (debounced) params.set("q", debounced);
+    const query = raw.trim();
+    if (query) params.set("q", query);
     else params.delete("q");
     params.delete("page");
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [debounced, pathname, router, searchParams]);
+    const base = pathname || "/";
+    const next = params.toString();
+    router.push(next ? `${base}?${next}` : base);
+  };
 
   useEffect(() => {
     if (!debounced) {
@@ -37,18 +44,38 @@ export function SearchBar({ defaultValue = "", placeholder = "Search by college,
   }, [debounced]);
 
   return (
-    <div className="relative">
+    <form
+      className="relative"
+      onSubmit={(e) => {
+        e.preventDefault();
+        applySearch(value);
+      }}
+    >
       <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
       <Input
-        className="pl-10 pr-10"
+        className="pl-10 pr-28"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 120)}
         placeholder={placeholder}
       />
+      <button
+        type="submit"
+        className="absolute right-10 top-1/2 -translate-y-1/2 rounded-md bg-accent px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+      >
+        Search
+      </button>
       {value ? (
-        <button aria-label="Clear search" onClick={() => setValue("")} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-surface2 hover:text-text">
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => {
+            setValue("");
+            applySearch("");
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-surface2 hover:text-text"
+        >
           <X size={14} />
         </button>
       ) : null}
@@ -63,6 +90,6 @@ export function SearchBar({ defaultValue = "", placeholder = "Search by college,
           ))}
         </div>
       ) : null}
-    </div>
+    </form>
   );
 }

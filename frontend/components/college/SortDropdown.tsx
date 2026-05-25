@@ -14,7 +14,9 @@ export function SortDropdown() {
         const params = new URLSearchParams(searchParams.toString());
         params.set("sort", e.target.value);
         params.delete("page");
-        router.push(`${pathname}?${params.toString()}`);
+        const base = pathname || "/";
+        const query = params.toString();
+        router.push(query ? `${base}?${query}` : base);
       }}
       className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
     >

@@ -1,60 +1,193 @@
 import { PrismaClient, CollegeType } from "@prisma/client";
+import { fallbackColleges } from "../lib/fallback-colleges";
 
 const prisma = new PrismaClient();
 
-const colleges = [
-  ["IIT Bombay","IITB","Mumbai","Maharashtra",CollegeType.IIT,1958,220000,4.9,3,"#0f172a","#3730a3"],
-  ["IIT Delhi","IITD","New Delhi","Delhi",CollegeType.IIT,1961,225000,4.9,2,"#111827","#4c1d95"],
-  ["IIT Madras","IITM","Chennai","Tamil Nadu",CollegeType.IIT,1959,210000,4.8,1,"#0b1120","#1d4ed8"],
-  ["IIT Kanpur","IITK","Kanpur","Uttar Pradesh",CollegeType.IIT,1959,205000,4.8,4,"#1f2937","#4338ca"],
-  ["IIT Kharagpur","IITKGP","Kharagpur","West Bengal",CollegeType.IIT,1951,215000,4.7,5,"#0f172a","#5b21b6"],
-  ["IISc Bangalore","IISc","Bengaluru","Karnataka",CollegeType.GOVERNMENT,1909,180000,4.9,1,"#0a0f1f","#1e3a8a"],
-  ["BITS Pilani","BITS","Pilani","Rajasthan",CollegeType.PRIVATE,1964,540000,4.5,20,"#1f2937","#7c2d12"],
-  ["NIT Trichy","NITT","Tiruchirappalli","Tamil Nadu",CollegeType.NIT,1964,165000,4.6,9,"#111827","#0f766e"],
-  ["NIT Surathkal","NITK","Mangaluru","Karnataka",CollegeType.NIT,1960,160000,4.5,12,"#172554","#1d4ed8"],
-  ["IIIT Hyderabad","IIITH","Hyderabad","Telangana",CollegeType.IIIT,1998,420000,4.7,47,"#111827","#065f46"],
-  ["VIT Vellore","VIT","Vellore","Tamil Nadu",CollegeType.PRIVATE,1984,420000,4.2,8,"#111827","#ea580c"],
-  ["Manipal Institute of Technology","MIT","Manipal","Karnataka",CollegeType.PRIVATE,1957,480000,4.1,14,"#1e1b4b","#be123c"],
-  ["Jadavpur University","JU","Kolkata","West Bengal",CollegeType.GOVERNMENT,1955,120000,4.4,17,"#172554","#7c3aed"],
-  ["Delhi Technological University","DTU","New Delhi","Delhi",CollegeType.GOVERNMENT,1941,210000,4.3,29,"#0f172a","#0f766e"],
-  ["Amity University Noida","AMITY","Noida","Uttar Pradesh",CollegeType.PRIVATE,2005,550000,3.9,49,"#1f2937","#be185d"],
-  ["SRM Institute of Science and Technology","SRM","Chennai","Tamil Nadu",CollegeType.DEEMED,1985,450000,4.0,13,"#111827","#9a3412"],
-  ["Thapar Institute of Engineering","TIET","Patiala","Punjab",CollegeType.DEEMED,1956,460000,4.1,20,"#1f2937","#0e7490"],
-  ["PSG College of Technology","PSG","Coimbatore","Tamil Nadu",CollegeType.AUTONOMOUS,1951,190000,4.3,63,"#082f49","#164e63"],
-  ["SASTRA University","SASTRA","Thanjavur","Tamil Nadu",CollegeType.DEEMED,1984,320000,4.0,34,"#1f2937","#166534"],
-  ["Christ University Bangalore","CHRIST","Bengaluru","Karnataka",CollegeType.PRIVATE,1969,300000,4.0,90,"#111827","#334155"]
-] as const;
+const reviewerPool = [
+  "Aarav Sharma",
+  "Diya Nair",
+  "Rohan Verma",
+  "Meera Iyer",
+  "Kabir Singh",
+  "Ananya Rao",
+  "Ishaan Gupta",
+  "Sneha Menon",
+  "Pranav Joshi",
+  "Nikita Das",
+];
+
+const recruitersByType: Record<CollegeType, string[]> = {
+  IIT: ["Google", "Microsoft", "Amazon", "NVIDIA", "Goldman Sachs"],
+  NIT: ["Amazon", "Adobe", "Oracle", "Deloitte", "Infosys"],
+  IIIT: ["Atlassian", "Uber", "Samsung", "Qualcomm", "Accenture"],
+  GOVERNMENT: ["TCS", "Infosys", "Wipro", "L&T", "Cognizant"],
+  PRIVATE: ["TCS", "Infosys", "Capgemini", "Accenture", "Cognizant"],
+  DEEMED: ["Accenture", "Cognizant", "Wipro", "Tech Mahindra", "HCL"],
+  AUTONOMOUS: ["TCS", "HCL", "Deloitte", "Siemens", "Bosch"],
+};
+
+const examByType: Record<CollegeType, string[]> = {
+  IIT: ["JEE Advanced", "JEE Main"],
+  NIT: ["JEE Main"],
+  IIIT: ["JEE Main"],
+  GOVERNMENT: ["JEE Main", "State CET"],
+  PRIVATE: ["JEE Main", "State CET", "BITSAT", "CUET"],
+  DEEMED: ["JEE Main", "State CET", "CUET"],
+  AUTONOMOUS: ["JEE Main", "State CET"],
+};
+
+const courseBias: Record<string, number> = {
+  "Computer Science and Engineering": 0,
+  "Data Science": 1200,
+  "Electronics and Communication": 2600,
+  "Electrical Engineering": 3400,
+  "Mechanical Engineering": 4600,
+  "Civil Engineering": 6200,
+  MBA: 12000,
+};
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+function getBaseRank(type: CollegeType, nirf: number | null, rating: number) {
+  const nirfImpact = nirf ? nirf * 160 : 10000;
+  const ratingImpact = Math.round((5 - rating) * 1800);
+  const typeBonus =
+    type === CollegeType.IIT
+      ? -2800
+      : type === CollegeType.NIT
+      ? -800
+      : type === CollegeType.IIIT
+      ? -400
+      : type === CollegeType.GOVERNMENT
+      ? 700
+      : type === CollegeType.AUTONOMOUS
+      ? 1100
+      : type === CollegeType.DEEMED
+      ? 1600
+      : 2200;
+
+  return clamp(3200 + nirfImpact + ratingImpact + typeBonus, 400, 260000);
+}
+
+function mapType(type: string): CollegeType {
+  if (type in CollegeType) return type as CollegeType;
+  return CollegeType.PRIVATE;
+}
 
 async function main() {
   await prisma.savedCollege.deleteMany();
+  await prisma.answer.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.savedComparison.deleteMany();
   await prisma.review.deleteMany();
+  await prisma.examCutoff.deleteMany();
   await prisma.placement.deleteMany();
   await prisma.course.deleteMany();
   await prisma.college.deleteMany();
 
-  for (const c of colleges) {
-    const [name,abbreviation,city,state,type,established,annualFees,rating,nirf,gradientFrom,gradientTo] = c;
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    await prisma.college.create({
+  const sourceColleges = fallbackColleges.slice(0, 120);
+
+  for (let idx = 0; idx < sourceColleges.length; idx += 1) {
+    const college = sourceColleges[idx];
+    const type = mapType(college.type);
+    const totalReviews = clamp(college.totalReviews, 3, 40);
+    const reviewers = [
+      reviewerPool[(idx * 3) % reviewerPool.length],
+      reviewerPool[(idx * 3 + 1) % reviewerPool.length],
+      reviewerPool[(idx * 3 + 2) % reviewerPool.length],
+    ];
+
+    const created = await prisma.college.create({
       data: {
-        name, slug, abbreviation, city, state, type, established, annualFees, rating, nirf, gradientFrom, gradientTo,
-        location: `${city}, ${state}`,
-        totalReviews: 3,
-        overview: `${name} is a leading institute known for strong academics, research culture, and campus life.`,
-        website: `https://${slug}.edu.in`,
-        courses: { create: [
-          { name: "Computer Science and Engineering", degree: "B.Tech", duration: "4 years", annualFees, totalSeats: 180 },
-          { name: "Mechanical Engineering", degree: "B.Tech", duration: "4 years", annualFees: Math.max(120000, annualFees - 20000), totalSeats: 120 },
-          { name: "MBA", degree: "MBA", duration: "2 years", annualFees: Math.max(180000, annualFees + 40000), totalSeats: 60 }
-        ] },
-        placements: { create: { avgPackage: Math.round((annualFees * (type === CollegeType.IIT ? 9 : 4.5)) / 1), highestPackage: Math.round((annualFees * (type === CollegeType.IIT ? 25 : 12)) / 1), medianPackage: Math.round((annualFees * (type === CollegeType.IIT ? 7 : 3.8)) / 1), placementPercent: type === CollegeType.IIT ? 94 : 82, topRecruiters: ["Google", "Microsoft", "Amazon", "TCS", "Infosys"], year: 2024 } },
-        reviews: { create: [
-          { rating, title: "Strong academics and faculty", content: "Great peer group, rigorous curriculum, and active clubs.", authorName: "Aarav Sharma", batch: "2025", course: "B.Tech CSE" },
-          { rating: Math.max(3.8, rating - 0.2), title: "Good placements", content: "Placement support is consistent with many top recruiters visiting.", authorName: "Diya Nair", batch: "2024", course: "B.Tech Mechanical" },
-          { rating: Math.max(3.7, rating - 0.3), title: "Campus and opportunities", content: "Campus is vibrant and offers strong internships and project exposure.", authorName: "Rohan Verma", batch: "2026", course: "MBA" }
-        ] }
-      }
+        name: college.name,
+        slug: college.slug,
+        abbreviation: college.abbreviation,
+        city: college.city,
+        state: college.state,
+        location: college.location,
+        type,
+        established: college.established,
+        annualFees: college.annualFees,
+        rating: college.rating,
+        totalReviews,
+        nirf: college.nirf,
+        gradientFrom: college.gradientFrom,
+        gradientTo: college.gradientTo,
+        overview: `${college.name} is a recognized institute with strong academics, active student life, and placement outcomes supported by published institutional reports.`,
+        website: null,
+        courses: {
+          create: college.courses.map((course, index) => ({
+            name: course.name,
+            degree: course.degree,
+            duration: course.degree.toLowerCase().includes("mba") ? "2 years" : "4 years",
+            annualFees: clamp(college.annualFees + index * 5000, 80000, 1200000),
+            totalSeats: course.degree.toLowerCase().includes("mba") ? 90 : 180,
+          })),
+        },
+        placements: {
+          create: {
+            avgPackage: college.placements.avgPackage,
+            highestPackage: college.placements.highestPackage,
+            medianPackage: college.placements.medianPackage,
+            placementPercent: college.placements.placementPercent,
+            topRecruiters: recruitersByType[type],
+            year: 2024,
+          },
+        },
+        reviews: {
+          create: [
+            {
+              rating: college.rating,
+              title: "Strong academics and curriculum",
+              content: "The curriculum is structured well, faculty support is available, and project opportunities are meaningful.",
+              authorName: reviewers[0],
+              batch: "2025",
+              course: "B.Tech",
+            },
+            {
+              rating: clamp(college.rating - 0.2, 3.6, 5),
+              title: "Placements and internships",
+              content: "Placement cell is active and internship opportunities are regularly shared with students.",
+              authorName: reviewers[1],
+              batch: "2024",
+              course: "B.Tech",
+            },
+            {
+              rating: clamp(college.rating - 0.3, 3.5, 5),
+              title: "Campus life and peer learning",
+              content: "The campus has active clubs and events, creating a collaborative and competitive environment.",
+              authorName: reviewers[2],
+              batch: "2026",
+              course: "B.Tech",
+            },
+          ],
+        },
+      },
+      include: { courses: true },
     });
+
+    const baseRank = getBaseRank(type, college.nirf, college.rating);
+    const examList = examByType[type];
+
+    for (const examName of examList) {
+      for (const course of created.courses) {
+        const bias = courseBias[course.name] ?? 5200;
+        const examBias = examName === "JEE Advanced" ? -2200 : examName === "BITSAT" ? 5400 : 1800;
+        const openingRank = clamp(Math.round(baseRank + bias + examBias), 150, 280000);
+        const closingRank = clamp(openingRank + 2800 + idx * 35, openingRank + 600, 300000);
+
+        await prisma.examCutoff.create({
+          data: {
+            collegeId: created.id,
+            examName,
+            courseName: course.name,
+            category: "GENERAL",
+            closingRank,
+            year: 2024,
+          },
+        });
+      }
+    }
   }
 }
 

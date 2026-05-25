@@ -84,10 +84,11 @@ export function CollegeCard({ college }: CollegeCardProps) {
           <RatingPill rating={college.rating} />
           <button disabled={disabled} onClick={onCompare} className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface2 px-3 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50">
             <Scale size={12} />
-            {added ? "? Added" : "+ Compare"}
+            {added ? "Added" : "+ Compare"}
           </button>
         </footer>
       </div>
     </article>
   );
 }
+

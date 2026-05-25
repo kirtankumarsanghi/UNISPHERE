@@ -1,5 +1,5 @@
 {
-  "name": "campuslens",
+  "name": "unisphere",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -21,6 +21,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "tailwind-merge": "^2.5.2",
+    "zod": "^4.4.3",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
