@@ -41,8 +41,9 @@ The platform is a monolith — Next.js handles both the frontend (React Server C
 2. College detail pages (Overview, Courses, Placements, Reviews, Cutoffs)
 3. Side-by-side college comparison (up to 3)
 4. College Predictor — rank-based admission chance estimator
-5. Q&A / Discussions — community questions and answers
-6. Authentication (email/password) + Saved Colleges + Saved Comparisons
+5. **AI Campus Guide** — Ask questions about a college using Google Gemini
+6. Q&A / Discussions — community questions and answers
+7. Authentication (email/password) + Saved Colleges + Saved Comparisons
 
 ---
 
@@ -101,6 +102,13 @@ Password: demo1234
 - Questions seeded per college (2 Q&A threads with answers per institution)
 - Paginated, ordered newest first
 
+### 🤖 AI Campus Guide
+- Context-aware chatbot available on every college detail page
+- Powered by Google Gemini 2.5 Flash and Vercel AI SDK
+- Streams responses instantly using AI stream protocol
+- Pre-loaded with college context (fees, rating, location, name) to give tailored answers
+- Handles rate limiting gracefully
+
 ### 🔐 Authentication + Saved Items
 - Email/password signup and login via NextAuth v5 Credentials provider
 - Passwords hashed with bcryptjs (salt rounds: 12)
@@ -123,6 +131,7 @@ Password: demo1234
 | Database | PostgreSQL (Neon) | Relational, serverless-compatible, free tier on Neon |
 | ORM | Prisma | Type-safe queries, excellent DX, migration support |
 | Auth | NextAuth v5 | Credentials provider, JWT sessions, middleware protection |
+| AI | Google Gemini & AI SDK | Vercel AI SDK core and streams for the Campus Guide |
 | Validation | Zod | Schema validation on all API route inputs |
 | Icons | lucide-react | Tree-shakeable, consistent icon set |
 | Fonts | Cabinet Grotesk + DM Sans | Editorial display + clean body font pair |
@@ -296,6 +305,12 @@ model ExamCutoff {
 | `GET` | `/api/discussions?collegeId=X` | All questions (optionally filtered by college) |
 | `POST` | `/api/discussions` | Post new question (auth required) |
 | `POST` | `/api/discussions/[id]/answer` | Post answer to a question (auth required) |
+
+### AI Campus Guide
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/chat` | AI stream powered by Gemini 2.5 Flash |
 
 ### Saved
 
