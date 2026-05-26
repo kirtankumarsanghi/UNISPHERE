@@ -110,15 +110,15 @@ export function CollegeCard({ college }: CollegeCardProps) {
         </div>
 
         {/* Stats grid */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="mt-6 grid grid-cols-3 gap-2">
           {[
             { label: "Fees/yr", value: formatFees(college.annualFees) },
             { label: "Avg Pkg", value: formatPackage(college.placements?.avgPackage ?? 0) },
             { label: "Placed", value: `${college.placements?.placementPercent ?? 0}%` },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl glass-panel p-3 text-center transition-colors hover:bg-white/[0.04]">
-              <p className="font-body-md text-[14px] font-semibold text-on-surface">{stat.value}</p>
-              <p className="mt-1 font-label-caps text-[9px] uppercase tracking-widest text-on-surface-variant/70">{stat.label}</p>
+            <div key={stat.label} className="rounded-2xl glass-panel p-3 text-center transition-colors hover:bg-white/[0.04] flex flex-col items-center justify-center min-h-[72px]">
+              <p className="font-headline-md text-[16px] text-on-surface leading-none">{stat.value}</p>
+              <p className="mt-2 font-label-caps text-[9px] uppercase tracking-[0.1em] text-on-surface-variant/70">{stat.label}</p>
             </div>
           ))}
         </div>

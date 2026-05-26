@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useCompare } from "@/hooks/useCompare";
 import { CollegeSelector } from "@/components/compare/CollegeSelector";
 import { CompareTable } from "@/components/compare/CompareTable";
-import { Scale, Save, Share2, Link2, CheckCircle } from "lucide-react";
+import { Scale, Save, Share2, Link2, CheckCircle, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/providers/ToastProvider";
 import { getCollegeImage } from "@/lib/college-images";
@@ -21,7 +21,7 @@ type College = {
 };
 
 export default function ComparePage() {
-  const { compareIds, clearCompare, setCompare } = useCompare();
+  const { compareIds, clearCompare, setCompare, removeFromCompare } = useCompare();
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -132,7 +132,7 @@ export default function ComparePage() {
           {colleges.map((c) => {
             const imgUrl = getCollegeImage(c.slug ?? "");
             return (
-              <div key={c.id} className="overflow-hidden rounded-2xl bg-white/[0.02] ring-1 ring-white/[0.06]">
+              <div key={c.id} className="group overflow-hidden rounded-[2rem] glass-card ring-1 ring-white/[0.06] relative">
                 <div className="relative h-32 overflow-hidden">
                   {imgUrl ? (
                     <>
@@ -144,6 +144,13 @@ export default function ComparePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
                   )}
+                  <button
+                    onClick={() => removeFromCompare(c.id)}
+                    className="absolute top-3 right-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white/70 backdrop-blur-md opacity-0 ring-1 ring-white/10 transition-all group-hover:opacity-100 hover:bg-black hover:text-white hover:scale-110"
+                    title="Remove from comparison"
+                  >
+                    <X size={14} />
+                  </button>
                   <div className="absolute bottom-3 left-4 right-4">
                     <p className="font-display text-lg font-bold text-white">{c.name}</p>
                     <p className="text-[12px] text-white/60">{c.city}, {c.state}</p>

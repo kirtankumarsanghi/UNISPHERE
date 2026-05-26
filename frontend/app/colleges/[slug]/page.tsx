@@ -11,6 +11,8 @@ import { PlacementsTab } from "@/components/detail/PlacementsTab";
 import { ReviewsTab } from "@/components/detail/ReviewsTab";
 import { DetailSidebar } from "@/components/detail/DetailSidebar";
 import { SimilarColleges } from "@/components/detail/SimilarColleges";
+import { ROICalculator } from "@/components/detail/ROICalculator";
+import { AICampusGuide } from "@/components/detail/AICampusGuide";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -103,6 +105,13 @@ export default async function CollegeDetail({ params }: PageProps) {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="space-y-6">
           <section id="overview"><OverviewTab overview={college.overview} established={college.established} website={college.website} /></section>
+          <section id="roi" className="scroll-mt-24">
+            <ROICalculator 
+              collegeName={college.name} 
+              defaultFee={college.annualFees * 4} 
+              defaultSalary={college.placements?.avgPackage ?? 800000} 
+            />
+          </section>
           <section id="courses"><CoursesTab courses={college.courses} /></section>
           <section id="placements"><PlacementsTab placement={college.placements} /></section>
           <section id="reviews"><ReviewsTab reviews={college.reviews} /></section>
@@ -116,6 +125,9 @@ export default async function CollegeDetail({ params }: PageProps) {
           <SimilarColleges colleges={similarColleges} />
         </section>
       )}
+
+      {/* Floating AI Campus Guide Widget */}
+      <AICampusGuide collegeName={college.name} />
     </div>
   );
 }

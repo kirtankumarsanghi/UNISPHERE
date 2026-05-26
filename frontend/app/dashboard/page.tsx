@@ -1,7 +1,8 @@
-import { Bookmark, Calendar, CheckCircle2, ChevronRight, Clock, FileText, Settings, Target, TrendingUp } from "lucide-react";
+import { Bookmark, Calendar, CheckCircle2, ChevronRight, Clock, FileText, Settings, Target, TrendingUp, BrainCircuit, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { getFallbackColleges } from "@/lib/fallback-loader";
 import { CollegeCard } from "@/components/college/CollegeCard";
+import { KanbanBoard } from "@/components/dashboard/KanbanBoard";
 
 export default async function DashboardPage() {
   const allColleges = await getFallbackColleges();
@@ -96,18 +97,8 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Saved Colleges */}
-            <div>
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="font-headline-md text-[24px] text-on-surface">Saved Colleges</h2>
-                <Link href="/compare" className="font-label-caps text-[10px] uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">Compare Selected</Link>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {savedColleges.map((college) => (
-                  <CollegeCard key={college.id} college={college} />
-                ))}
-              </div>
-            </div>
+            {/* Application Pipeline Kanban */}
+            <KanbanBoard initialColleges={allColleges.slice(0, 6)} />
 
           </div>
 
