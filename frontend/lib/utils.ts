@@ -8,8 +8,8 @@ const formatLakh = (amount: number) => {
   return Number.isInteger(lakhs) ? String(lakhs) : lakhs.toFixed(1);
 };
 
-export const formatFees = (amount: number) => `?${formatLakh(amount)}L/yr`;
-export const formatPackage = (amount: number) => `?${formatLakh(amount)} LPA`;
+export const formatFees = (amount: number) => `₹${formatLakh(amount)}L/yr`;
+export const formatPackage = (amount: number) => `₹${formatLakh(amount)} LPA`;
 
 export const getGradientStyle = (from: string, to: string) => ({
   background: `linear-gradient(135deg, ${from}, ${to})`

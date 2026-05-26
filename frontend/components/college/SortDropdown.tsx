@@ -18,13 +18,13 @@ export function SortDropdown() {
         const query = params.toString();
         router.push(query ? `${base}?${query}` : base);
       }}
-      className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+      className="rounded-xl glass-panel px-4 py-2 font-body-md text-[14px] text-on-surface outline-none focus:ring-1 focus:ring-primary/50"
     >
-      <option value="rating_desc">Highest Rating</option>
-      <option value="fees_asc">Lowest Fees</option>
-      <option value="placement_desc">Highest Package</option>
-      <option value="name_asc">Alphabetical</option>
-      <option value="popular_desc">Most Popular</option>
+      <option value="rating_desc" className="bg-surface-deep">Highest Rating</option>
+      <option value="fees_asc" className="bg-surface-deep">Lowest Fees</option>
+      <option value="placement_desc" className="bg-surface-deep">Highest Package</option>
+      <option value="name_asc" className="bg-surface-deep">Alphabetical</option>
+      <option value="popular_desc" className="bg-surface-deep">Most Popular</option>
     </select>
   );
 }

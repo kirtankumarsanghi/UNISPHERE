@@ -8,9 +8,15 @@ export async function GET(req: NextRequest) {
   const ids = idsParam.split(",").filter(Boolean).slice(0, 3);
 
   try {
-    const colleges = await prisma.college.findMany({ where: { id: { in: ids } }, include: { placements: true, courses: true } });
+    const colleges = await prisma.college.findMany({
+      where: { id: { in: ids } },
+      include: { placements: true, courses: true, _count: { select: { reviews: true } } }
+    });
     const byId = new Map(colleges.map((c) => [c.id, c]));
-    const ordered = ids.map((id) => byId.get(id)).filter(Boolean);
+    const ordered = ids
+      .map((id) => byId.get(id))
+      .filter((college): college is NonNullable<typeof college> => Boolean(college))
+      .map((college) => ({ ...college, totalReviews: college._count.reviews }));
     return NextResponse.json(ordered);
   } catch {
     const fallbackColleges = await getFallbackColleges();

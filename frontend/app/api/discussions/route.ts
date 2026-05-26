@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { discussionCreateSchema } from "@/lib/validators";
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,10 +36,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, content, collegeId } = await req.json();
-    if (!title || !content) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
+    const parsed = discussionCreateSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "Invalid fields" }, { status: 400 });
+
+    const { title, content, collegeId } = parsed.data;
 
     const question = await prisma.question.create({
       data: {

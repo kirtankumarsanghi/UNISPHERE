@@ -14,15 +14,15 @@ export function SimilarColleges({ colleges }: { colleges: SimilarCollege[] }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {colleges.map((c) => (
-        <Link key={c.id} href={`/colleges/${c.slug}`} className="group rounded-2xl border border-border bg-surface transition-all hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg">
-          <div className="h-20 rounded-t-2xl" style={{ background: `linear-gradient(135deg, ${c.gradientFrom}, ${c.gradientTo})` }}>
-            <div className="grid h-full place-items-center font-syne text-2xl font-extrabold text-white/15">{c.abbreviation}</div>
+        <Link key={c.id} href={`/colleges/${c.slug}`} className="group relative flex flex-col overflow-hidden rounded-[20px] bg-white/[0.02] ring-1 ring-white/5 transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.04] hover:ring-white/10 hover:shadow-glow-sm">
+          <div className="h-24 w-full" style={{ background: `linear-gradient(to bottom right, ${c.gradientFrom}30, ${c.gradientTo}10)` }}>
+            <div className="flex h-full items-center justify-center font-display text-3xl font-extrabold tracking-tighter text-white/20">{c.abbreviation}</div>
           </div>
-          <div className="p-3">
-            <h3 className="line-clamp-1 font-syne text-sm font-bold tracking-tight">{c.name}</h3>
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-muted"><MapPin size={10} />{c.city}, {c.state}</p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-blue-400">{formatFees(c.annualFees)}</span>
+          <div className="flex flex-1 flex-col p-5">
+            <h3 className="line-clamp-1 font-display text-[15px] font-bold tracking-tight text-text-primary">{c.name}</h3>
+            <p className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-text-muted"><MapPin size={12} />{c.city}, {c.state}</p>
+            <div className="mt-auto pt-4 flex items-center justify-between">
+              <span className="font-mono text-sm font-semibold text-text-primary">{formatFees(c.annualFees)}</span>
               <RatingPill rating={c.rating} />
             </div>
           </div>

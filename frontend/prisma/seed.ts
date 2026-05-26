@@ -84,8 +84,7 @@ async function main() {
   await prisma.placement.deleteMany();
   await prisma.course.deleteMany();
   await prisma.college.deleteMany();
-
-  const sourceColleges = fallbackColleges.slice(0, 120);
+  const sourceColleges = fallbackColleges;
 
   for (let idx = 0; idx < sourceColleges.length; idx += 1) {
     const college = sourceColleges[idx];

@@ -1,12 +1,15 @@
-# CampusLens Backend
+# Backend Folder Status
 
-This folder contains backend data-layer assets:
-- Prisma schema
-- Seed script
+This `backend/` directory is **legacy reference only**.
 
-Environment essentials:
-- DATABASE_URL
-- AUTH_SECRET (or NEXTAUTH_SECRET)
-- NEXTAUTH_URL
+Authoritative app runtime and APIs are in:
+- `frontend/` (Next.js app router)
+- `frontend/prisma/schema.prisma`
+- `frontend/prisma/seed.ts`
 
-Use the frontend app for API/runtime (`../frontend`).
+Use only `frontend/` scripts for development:
+- `npm run dev`
+- `npm run db:push`
+- `npm run db:seed`
+
+Do not run migrations/seeds from `backend/prisma` unless this folder is explicitly revived as a separate service.

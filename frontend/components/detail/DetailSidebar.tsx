@@ -51,36 +51,36 @@ export function DetailSidebar({ college }: Props) {
   ];
 
   return (
-    <aside className="sticky top-20 space-y-4">
+    <aside className="sticky top-24 space-y-4">
       <div className="space-y-2">
-        <button onClick={onSave} className={`flex w-full items-center justify-center gap-2 rounded-[10px] border px-4 py-2.5 text-sm font-semibold transition-all ${saved ? "border-accent2/50 bg-accent2/10 text-accent2" : "border-border bg-surface hover:border-accent2/40"}`}>
-          <Heart size={15} fill={saved ? "#ff6584" : "none"} color={saved ? "#ff6584" : "currentColor"} />
-          {saved ? "Saved" : "Save College"}
+        <button onClick={onSave} className={`group flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-[13px] font-bold transition-all duration-300 ${saved ? "bg-white text-black" : "bg-white/[0.02] text-text-primary ring-1 ring-white/10 hover:bg-white/[0.06]"}`}>
+          <Heart size={16} className={saved ? "fill-black" : "transition-transform group-hover:scale-110"} />
+          {saved ? "Saved to Profile" : "Save College"}
         </button>
-        <button onClick={onCompare} disabled={compareIds.length >= 3 && !compared} className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition-all hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-50">
-          <Scale size={15} />
+        <button onClick={onCompare} disabled={compareIds.length >= 3 && !compared} className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.02] px-4 py-3 text-[13px] font-bold text-text-primary ring-1 ring-white/10 transition-all duration-300 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50">
+          <Scale size={16} className={compared ? "text-white" : "transition-transform group-hover:scale-110"} />
           {compared ? "In Compare" : "Add to Compare"}
         </button>
-        <button onClick={onShare} className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition-all hover:border-accent/40">
-          <Share2 size={15} /> Share
+        <button onClick={onShare} className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.02] px-4 py-3 text-[13px] font-bold text-text-primary ring-1 ring-white/10 transition-all duration-300 hover:bg-white/[0.06]">
+          <Share2 size={16} className="transition-transform group-hover:scale-110" /> Share
         </button>
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-5">
-        <h3 className="font-syne text-lg font-bold">Quick Info</h3>
-        <div className="mt-3 divide-y divide-border/60">
+      <div className="rounded-[24px] bg-white/[0.02] p-6 ring-1 ring-white/5">
+        <h3 className="font-display text-lg font-bold tracking-tight text-text-primary">Quick Info</h3>
+        <div className="mt-4 divide-y divide-white/5">
           {rows.map(([k, v]) => (
-            <div key={k} className="flex items-center justify-between py-2.5 text-sm">
-              <span className="text-muted">{k}</span>
-              <span className="font-semibold">{v}</span>
+            <div key={k} className="flex items-center justify-between py-3 text-sm">
+              <span className="text-text-muted">{k}</span>
+              <span className="font-semibold text-text-primary">{v}</span>
             </div>
           ))}
         </div>
       </div>
 
       {college.website && (
-        <a href={college.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-[10px] border border-accent/30 bg-accent/5 px-4 py-2.5 text-sm font-semibold text-accent transition-all hover:bg-accent/10">
-          <ExternalLink size={15} /> Visit Official Website
+        <a href={college.website} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.03] px-4 py-3 text-[13px] font-bold text-text-primary ring-1 ring-white/10 transition-all duration-300 hover:bg-white/[0.08]">
+          <ExternalLink size={16} /> Official Website
         </a>
       )}
     </aside>

@@ -1,11 +1,12 @@
 "use client";
-import { Heart, MapPin, Scale } from "lucide-react";
+import { Heart, MapPin, Scale, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatFees, formatPackage } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
 import { useSaved } from "@/hooks/useSaved";
-import { RatingPill } from "@/components/ui/RatingPill";
 import { useToast } from "@/components/providers/ToastProvider";
+import { getCollegeImage } from "@/lib/college-images";
 
 type CollegeCardProps = {
   college: {
@@ -31,6 +32,7 @@ export function CollegeCard({ college }: CollegeCardProps) {
   const added = isInCompare(college.id);
   const saved = isSaved(college.id);
   const disabled = compareIds.length >= 3 && !added;
+  const imageUrl = getCollegeImage(college.slug);
 
   const onCompare = () => {
     const result = addToCompare({ id: college.id, name: college.name, abbreviation: college.abbreviation });
@@ -45,50 +47,101 @@ export function CollegeCard({ college }: CollegeCardProps) {
   };
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-border/80 bg-surface/95 transition-all duration-300 hover:-translate-y-1 hover:border-accent/45 hover:shadow-[0_20px_50px_rgba(4,8,20,0.55)]">
-      <header className="relative h-28 overflow-hidden rounded-t-2xl" style={{ background: `linear-gradient(135deg, ${college.gradientFrom}, ${college.gradientTo})` }}>
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90">
+    <article className="group relative flex flex-col overflow-hidden rounded-[2rem] glass-card transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_10px_40px_-15px_rgba(78,222,163,0.15)]">
+      {/* Card header — image or gradient */}
+      <header className="relative h-40 overflow-hidden">
+        {imageUrl ? (
+          <>
+            <Image
+              src={imageUrl}
+              alt={`${college.name} campus`}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${college.gradientFrom}, ${college.gradientTo})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          </>
+        )}
+
+        {/* Type badge */}
+        <div className="absolute left-4 top-4 rounded-full bg-black/40 px-3 py-1.5 font-label-caps text-label-caps uppercase tracking-[0.15em] text-white/90 backdrop-blur-md ring-1 ring-white/10">
           {college.type ?? "COLLEGE"}
         </div>
-        <button aria-label="Save college" onClick={onSave} className="absolute right-3 top-3 rounded-full bg-black/30 p-1.5 text-white/90 transition-all duration-200 hover:bg-black/45">
-          <Heart size={14} fill={saved ? "#ff6584" : "none"} color={saved ? "#ff6584" : "currentColor"} />
+
+        {/* Save button */}
+        <button
+          aria-label="Save college"
+          onClick={onSave}
+          className="absolute right-4 top-4 rounded-full bg-black/30 p-2.5 text-white/80 backdrop-blur-md ring-1 ring-white/10 transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
+        >
+          <Heart size={16} fill={saved ? "#fff" : "none"} className={saved ? "text-white" : "text-white/70"} />
         </button>
-        <div className="absolute inset-0 grid place-items-center font-syne text-3xl font-extrabold tracking-tight text-white/15">{college.abbreviation}</div>
+
+        {/* College abbreviation watermark */}
+        <div className="absolute bottom-2 left-4 font-headline-lg text-[64px] font-black leading-none tracking-tighter text-white/[0.08] select-none pointer-events-none">
+          {college.abbreviation}
+        </div>
+
+        {/* Rating badge */}
+        <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-black/50 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
+          <span className="font-label-caps text-label-caps text-white">{college.rating}</span>
+          <span className="text-[12px] text-yellow-400">★</span>
+        </div>
       </header>
-      <div className="p-4 sm:p-5">
-        <Link href={`/colleges/${college.slug}`} className="line-clamp-2 font-syne text-base font-bold tracking-tight">
-          {college.name}
+
+      {/* Card body */}
+      <div className="flex flex-1 flex-col p-6">
+        <Link href={`/colleges/${college.slug}`} className="group/link inline-flex items-start gap-1">
+          <h3 className="line-clamp-2 font-headline-md text-headline-md text-on-surface transition-colors group-hover/link:text-primary">
+            {college.name}
+          </h3>
+          <ExternalLink size={14} className="mt-1 flex-none text-on-surface-variant/50 opacity-0 transition-all group-hover/link:opacity-100" />
         </Link>
-        <div className="mt-1 flex items-center gap-1 text-xs text-muted">
-          <MapPin size={12} />
-          {college.city}, {college.state}
+
+        <div className="mt-3 flex items-center gap-1.5 font-body-md text-body-md text-on-surface-variant">
+          <MapPin size={14} className="flex-none" />
+          <span>{college.city}, {college.state}</span>
         </div>
 
-        <div className="my-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
-            <p className="text-xs font-semibold text-blue-400">{formatFees(college.annualFees)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted">Fees/yr</p>
-          </div>
-          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
-            <p className="text-xs font-semibold text-blue-400">{formatPackage(college.placements?.avgPackage ?? 0)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted">Avg Pkg</p>
-          </div>
-          <div className="rounded-lg border border-border/60 bg-surface2/70 p-2">
-            <p className="text-xs font-semibold text-accent3">{college.placements?.placementPercent ?? 0}%</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted">Placed</p>
-          </div>
+        {/* Stats grid */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[
+            { label: "Fees/yr", value: formatFees(college.annualFees) },
+            { label: "Avg Pkg", value: formatPackage(college.placements?.avgPackage ?? 0) },
+            { label: "Placed", value: `${college.placements?.placementPercent ?? 0}%` },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl glass-panel p-3 text-center transition-colors hover:bg-white/[0.04]">
+              <p className="font-body-md text-[14px] font-semibold text-on-surface">{stat.value}</p>
+              <p className="mt-1 font-label-caps text-[9px] uppercase tracking-widest text-on-surface-variant/70">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
-        <footer className="flex items-center justify-between">
-          <RatingPill rating={college.rating} />
-          <button disabled={disabled} onClick={onCompare} className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface2 px-3 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50">
+        {/* Footer actions */}
+        <footer className="mt-auto flex items-center justify-between pt-6">
+          <Link href={`/colleges/${college.slug}`} className="font-label-caps text-label-caps text-on-surface-variant transition-colors hover:text-on-surface uppercase tracking-widest">
+            View Details →
+          </Link>
+          <button
+            disabled={disabled}
+            onClick={onCompare}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 font-label-caps text-label-caps uppercase tracking-widest ring-1 transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+              added
+                ? "bg-primary/10 text-primary ring-primary/30"
+                : "bg-white/[0.02] text-on-surface-variant ring-white/[0.08] hover:bg-white/[0.06] hover:text-on-surface hover:ring-white/[0.15]"
+            }`}
+          >
             <Scale size={12} />
-            {added ? "Added" : "+ Compare"}
+            {added ? "Added" : "Compare"}
           </button>
         </footer>
       </div>
     </article>
   );
 }
-

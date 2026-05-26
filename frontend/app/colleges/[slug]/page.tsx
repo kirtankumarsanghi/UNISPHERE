@@ -71,29 +71,29 @@ export default async function CollegeDetail({ params }: PageProps) {
   if (!college) notFound();
 
   const quickStats = [
-    { label: "Annual Fees", value: formatFees(college.annualFees), tone: "text-blue-400" },
-    { label: "Avg Package", value: formatPackage(college.placements?.avgPackage ?? 0), tone: "text-blue-400" },
-    { label: "Highest Package", value: formatPackage(college.placements?.highestPackage ?? 0), tone: "text-blue-400" },
-    { label: "Placement %", value: `${college.placements?.placementPercent ?? 0}%`, tone: "text-accent3" },
+    { label: "Annual Fees", value: formatFees(college.annualFees) },
+    { label: "Avg Package", value: formatPackage(college.placements?.avgPackage ?? 0) },
+    { label: "Highest Package", value: formatPackage(college.placements?.highestPackage ?? 0) },
+    { label: "Placement %", value: `${college.placements?.placementPercent ?? 0}%` },
   ];
 
   return (
-    <div>
-      <nav className="mb-3 flex items-center gap-1 text-xs text-muted">
-        <Link href="/" className="hover:text-accent">Home</Link>
-        <span>&gt;</span>
-        <Link href="/" className="hover:text-accent">Colleges</Link>
-        <span>&gt;</span>
-        <span className="text-text">{college.name}</span>
+    <div className="pb-24">
+      <nav className="mb-4 flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+        <Link href="/" className="transition-colors hover:text-on-surface">Home</Link>
+        <span className="text-white/10">/</span>
+        <Link href="/" className="transition-colors hover:text-on-surface">Colleges</Link>
+        <span className="text-white/10">/</span>
+        <span className="text-on-surface">{college.name}</span>
       </nav>
 
       <CollegeHero college={college} />
 
-      <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {quickStats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-surface p-3 transition-all hover:border-accent/30">
-            <p className={`font-syne text-xl font-extrabold tracking-tight ${s.tone}`}>{s.value}</p>
-            <p className="text-xs text-muted">{s.label}</p>
+      <section className="my-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {quickStats.map((s, i) => (
+          <div key={s.label} className="group overflow-hidden rounded-[2rem] glass-card p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(78,222,163,0.1)]">
+            <p className="font-headline-md text-[24px] text-on-surface">{s.value}</p>
+            <p className="mt-1 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant transition-colors group-hover:text-on-surface">{s.label}</p>
           </div>
         ))}
       </section>
@@ -112,7 +112,7 @@ export default async function CollegeDetail({ params }: PageProps) {
 
       {similarColleges.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-4 font-syne text-2xl font-bold tracking-tight">Similar Colleges</h2>
+          <h2 className="mb-4 font-headline-md text-[24px] text-on-surface">Similar Colleges</h2>
           <SimilarColleges colleges={similarColleges} />
         </section>
       )}

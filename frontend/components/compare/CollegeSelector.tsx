@@ -28,21 +28,21 @@ export function CollegeSelector() {
         {slots.map((idx) => {
           const c = compareColleges[idx];
           if (c) {
-            return <div key={idx} className="rounded-2xl border border-border bg-surface p-4"><div className="flex items-start justify-between"><div><p className="font-syne text-lg font-bold">{c.abbreviation}</p><p className="text-sm text-muted">{c.name}</p></div><button onClick={() => removeFromCompare(c.id)} className="text-muted hover:text-text"><X size={16} /></button></div></div>;
+            return <div key={idx} className="rounded-[2rem] glass-card p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-[0_4px_30px_rgba(78,222,163,0.15)]"><div className="flex items-start justify-between"><div><p className="font-headline-lg text-[24px] font-bold text-on-surface">{c.abbreviation}</p><p className="mt-2 font-body-md text-on-surface-variant">{c.name}</p></div><button onClick={() => removeFromCompare(c.id)} className="text-on-surface-variant hover:text-primary transition-colors"><X size={18} /></button></div></div>;
           }
-          return <button key={idx} onClick={() => setOpen(true)} className="grid h-24 place-items-center rounded-2xl border border-dashed border-border bg-surface text-muted hover:border-accent hover:text-accent"><span className="inline-flex items-center gap-1 text-sm"><PlusCircle size={15} /> Add College</span></button>;
+          return <button key={idx} onClick={() => setOpen(true)} className="grid h-48 place-items-center rounded-[2rem] glass-card transition-all hover:border-primary/50 hover:bg-white/[0.04] text-on-surface-variant hover:text-primary"><span className="flex flex-col items-center gap-3 font-label-caps text-[12px] uppercase tracking-widest"><div className="rounded-full border border-current p-1.5"><PlusCircle size={16} /></div> Add College</span></button>;
         })}
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 backdrop-blur-sm" onClick={() => setOpen(false)}>
-          <div className="w-[min(92vw,640px)] rounded-2xl border border-border bg-surface p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-syne text-xl font-bold">Add College to Compare</h3>
-              <button onClick={() => setOpen(false)} className="rounded-full border border-border p-1"><X size={14} /></button>
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setOpen(false)}>
+          <div className="w-[min(92vw,640px)] rounded-[2rem] glass-card bg-surface-deep/90 p-8 shadow-modal animate-fade-in-up backdrop-blur-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="font-headline-md text-[24px] text-on-surface">Add College to Compare</h3>
+              <button onClick={() => setOpen(false)} className="rounded-full glass-panel p-2 text-on-surface-variant transition-colors hover:bg-white/[0.05] hover:text-on-surface"><X size={16} /></button>
             </div>
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search college" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2" />
-            <div className="mt-3 max-h-72 space-y-2 overflow-auto">
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search college..." className="w-full rounded-xl glass-panel px-5 py-4 font-body-md text-on-surface placeholder:text-on-surface-variant/50 transition-all focus:outline-none focus:ring-1 focus:ring-primary/50" />
+            <div className="mt-4 max-h-72 space-y-3 overflow-auto">
               {results.map((r) => (
                 <button
                   key={r.id}
@@ -50,10 +50,10 @@ export function CollegeSelector() {
                     addToCompare({ id: r.id, name: r.name, abbreviation: r.abbreviation });
                     setOpen(false);
                   }}
-                  className="w-full rounded-xl border border-border bg-surface2 px-3 py-2 text-left hover:border-accent"
+                  className="w-full rounded-xl glass-panel px-5 py-4 text-left transition-all hover:border-primary/50 hover:bg-white/[0.05]"
                 >
-                  <p className="font-medium">{r.name}</p>
-                  <p className="text-xs text-muted">{r.city}, {r.state}</p>
+                  <p className="font-body-md font-semibold text-on-surface">{r.name}</p>
+                  <p className="mt-1 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant/70">{r.city}, {r.state}</p>
                 </button>
               ))}
             </div>

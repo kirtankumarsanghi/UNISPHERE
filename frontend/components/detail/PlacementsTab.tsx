@@ -10,39 +10,39 @@ type Placement = {
 } | null;
 
 export function PlacementsTab({ placement }: { placement: Placement }) {
-  if (!placement) return <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">No placement data available.</p>;
+  if (!placement) return <p className="rounded-[24px] bg-white/[0.02] p-8 text-sm text-text-muted ring-1 ring-white/5">No placement data available.</p>;
 
   const stats = [
-    { label: "Avg Package", value: formatPackage(placement.avgPackage), color: "text-blue-400" },
-    { label: "Highest Package", value: formatPackage(placement.highestPackage), color: "text-blue-400" },
-    { label: "Median Package", value: formatPackage(placement.medianPackage), color: "text-blue-400" },
-    { label: "Placement %", value: `${placement.placementPercent}%`, color: "text-accent3" }
+    { label: "Avg Package", value: formatPackage(placement.avgPackage) },
+    { label: "Highest Package", value: formatPackage(placement.highestPackage) },
+    { label: "Median Package", value: formatPackage(placement.medianPackage) },
+    { label: "Placement %", value: `${placement.placementPercent}%` }
   ];
 
   return (
     <section className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-surface p-3">
-            <p className={`font-syne text-2xl font-extrabold tracking-tight ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-muted">{s.label}</p>
+          <div key={s.label} className="group overflow-hidden rounded-[20px] bg-white/[0.02] p-5 ring-1 ring-white/5 transition-all duration-300 hover:bg-white/[0.04] hover:ring-white/10 hover:shadow-glow-sm">
+            <p className="font-mono text-xl font-bold tracking-tight text-text-primary">{s.value}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-text-muted transition-colors group-hover:text-text-secondary">{s.label}</p>
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-border bg-surface p-4">
-        <h4 className="font-syne text-lg font-bold">Top Recruiters</h4>
+      <div className="rounded-[24px] bg-white/[0.02] p-8 ring-1 ring-white/5 transition-all duration-300 hover:ring-white/10">
+        <h4 className="font-display text-lg font-bold tracking-tight text-text-primary">Top Recruiters</h4>
         {placement.topRecruiters?.length ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             {placement.topRecruiters.map((r) => (
-              <span key={r} className="rounded-lg border border-border bg-surface2 px-3 py-1.5 text-xs text-muted">
+              <span key={r} className="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-text-secondary ring-1 ring-white/10 transition-colors hover:bg-white/[0.08] hover:text-text-primary">
                 {r}
               </span>
             ))}
           </div>
         ) : (
-          <p className="mt-3 text-sm text-muted">Recruiter list is currently unavailable.</p>
+          <p className="mt-6 text-[13px] text-text-muted">Recruiter list is currently unavailable.</p>
         )}
-        {placement.year ? <p className="mt-3 text-xs text-muted">Placement data for batch {placement.year}</p> : null}
+        {placement.year && <p className="mt-8 font-mono text-[10px] uppercase tracking-widest text-text-disabled">Placement data for batch {placement.year}</p>}
       </div>
     </section>
   );

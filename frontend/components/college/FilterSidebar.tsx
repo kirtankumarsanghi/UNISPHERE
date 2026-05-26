@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 
 type FilterState = {
   type: string;
@@ -17,8 +18,56 @@ type FilterState = {
   maxNirf: string;
 };
 
-const types = ["", "IIT", "NIT", "IIIT", "GOVERNMENT", "PRIVATE", "DEEMED"];
-const states = ["", "Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Telangana", "Rajasthan", "Uttar Pradesh", "West Bengal", "Punjab"];
+const collegeTypes = ["IIT", "NIT", "IIIT", "GOVERNMENT", "PRIVATE", "DEEMED", "AUTONOMOUS"];
+
+const allStates = [
+  "Andhra Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+  "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim",
+  "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+];
+
+const ratingOptions = [
+  { label: "4.5+ ★", value: "4.5" },
+  { label: "4.0+ ★", value: "4" },
+  { label: "3.5+ ★", value: "3.5" },
+  { label: "3.0+ ★", value: "3" },
+];
+
+const placementOptions = [
+  { label: "Above 20 LPA", value: "2000000" },
+  { label: "10–20 LPA", value: "1000000" },
+  { label: "5–10 LPA", value: "500000" },
+  { label: "Below 5 LPA", value: "100000" },
+];
+
+const feeRanges = [
+  { label: "Under ₹1L", min: "0", max: "100000" },
+  { label: "₹1L – ₹3L", min: "100000", max: "300000" },
+  { label: "₹3L – ₹5L", min: "300000", max: "500000" },
+  { label: "₹5L – ₹10L", min: "500000", max: "1000000" },
+  { label: "₹10L+", min: "1000000", max: "10000000" },
+];
+
+function AccordionSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-white/[0.04] pb-4">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between py-2 text-left"
+      >
+        <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">{title}</span>
+        <ChevronDown size={14} className={`text-on-surface-variant/50 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <div className={`overflow-hidden transition-all duration-300 ${open ? "mt-3 max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function FilterSidebar() {
   const search = useSearchParams();
@@ -44,9 +93,13 @@ export function FilterSidebar() {
 
   const [filters, setFilters] = useState<FilterState>(initial);
 
-  const apply = () => {
+  const activeCount = useMemo(() => {
+    return Object.values(filters).filter((v) => v !== "").length;
+  }, [filters]);
+
+  const applyFilters = useCallback((newFilters: FilterState) => {
     const params = new URLSearchParams(search.toString());
-    Object.entries(filters).forEach(([k, v]) => {
+    Object.entries(newFilters).forEach(([k, v]) => {
       if (v) params.set(k, v);
       else params.delete(k);
     });
@@ -54,65 +107,188 @@ export function FilterSidebar() {
     const base = pathname || "/";
     const query = params.toString();
     router.push(query ? `${base}?${query}` : base);
+  }, [search, router, pathname]);
+
+  const update = (key: keyof FilterState, value: string) => {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    applyFilters(next);
+  };
+
+  const updateFeeRange = (min: string, max: string) => {
+    const next = { ...filters, minFees: min, maxFees: max };
+    setFilters(next);
+    applyFilters(next);
   };
 
   const clear = () => {
-    const params = new URLSearchParams(search.toString());
-    ["type", "state", "city", "course", "degree", "minRating", "minPlacement", "minFees", "maxFees", "minYear", "maxNirf"].forEach((k) => params.delete(k));
-    params.delete("page");
-    setFilters({ type: "", state: "", city: "", course: "", degree: "", minRating: "", minPlacement: "", minFees: "", maxFees: "", minYear: "", maxNirf: "" });
-    const base = pathname || "/";
-    const query = params.toString();
-    router.push(query ? `${base}?${query}` : base);
+    const empty: FilterState = { type: "", state: "", city: "", course: "", degree: "", minRating: "", minPlacement: "", minFees: "", maxFees: "", minYear: "", maxNirf: "" };
+    setFilters(empty);
+    applyFilters(empty);
   };
 
+  const isActiveFee = (min: string, max: string) => filters.minFees === min && filters.maxFees === max;
+
   return (
-    <aside className="sticky top-20 h-fit rounded-2xl border border-border/80 bg-surface/95 p-4 shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
-      <div className="mb-4 flex items-center justify-between border-b border-border/70 pb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">Filters</p>
-        <button type="button" onClick={clear} className="rounded-md px-2 py-1 text-xs text-accent hover:bg-accent/10">Reset</button>
+    <aside className="sticky top-20 h-fit rounded-[2rem] glass-card p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} className="text-on-surface-variant/70" />
+          <span className="font-label-caps text-label-caps text-on-surface uppercase tracking-widest">Filters</span>
+          {activeCount > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-background">
+              {activeCount}
+            </span>
+          )}
+        </div>
+        {activeCount > 0 && (
+          <button onClick={clear} className="flex items-center gap-1 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant/70 transition-colors hover:text-on-surface">
+            <X size={12} /> Clear
+          </button>
+        )}
       </div>
 
-      <div className="space-y-3 text-sm">
-        <select value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5">
-          {types.map((t) => <option key={t} value={t}>{t || "Type: Any"}</option>)}
-        </select>
+      <div className="space-y-1">
+        {/* COLLEGE TYPE — Chip selector */}
+        <AccordionSection title="College Type" defaultOpen>
+          <div className="flex flex-wrap gap-1.5">
+            {collegeTypes.map((t) => (
+              <button
+                key={t}
+                onClick={() => update("type", filters.type === t ? "" : t)}
+                className={`rounded-full px-3 py-1.5 font-label-caps text-label-caps transition-all duration-200 ${
+                  filters.type === t
+                    ? "bg-primary text-background ring-1 ring-primary shadow-[0_0_15px_rgba(78,222,163,0.3)]"
+                    : "glass-panel text-on-surface-variant hover:bg-white/[0.06] hover:text-on-surface"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </AccordionSection>
 
-        <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))} className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5">
-          {states.map((s) => <option key={s} value={s}>{s || "State: Any"}</option>)}
-        </select>
+        {/* LOCATION */}
+        <AccordionSection title="Location" defaultOpen>
+          <div className="space-y-2">
+            <select
+              value={filters.state}
+              onChange={(e) => update("state", e.target.value)}
+              className="w-full rounded-xl glass-panel px-3 py-2.5 font-body-md text-sm text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary/50"
+            >
+              <option value="" className="bg-surface-deep">All States</option>
+              {allStates.map((s) => <option key={s} value={s} className="bg-surface-deep">{s}</option>)}
+            </select>
+            <input
+              value={filters.city}
+              onChange={(e) => update("city", e.target.value)}
+              placeholder="City name..."
+              className="w-full rounded-xl glass-panel px-3 py-2.5 font-body-md text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+        </AccordionSection>
 
-        <input value={filters.city} onChange={(e) => setFilters((f) => ({ ...f, city: e.target.value }))} placeholder="City" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-        <input value={filters.course} onChange={(e) => setFilters((f) => ({ ...f, course: e.target.value }))} placeholder="Course" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-        <input value={filters.degree} onChange={(e) => setFilters((f) => ({ ...f, degree: e.target.value }))} placeholder="Degree (B.Tech, MBA)" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
+        {/* FEES — Chip ranges */}
+        <AccordionSection title="Annual Fees">
+          <div className="flex flex-wrap gap-1.5">
+            {feeRanges.map((r) => (
+              <button
+                key={r.label}
+                onClick={() => isActiveFee(r.min, r.max) ? updateFeeRange("", "") : updateFeeRange(r.min, r.max)}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all duration-200 ${
+                  isActiveFee(r.min, r.max)
+                    ? "bg-white text-black ring-1 ring-white"
+                    : "bg-white/[0.03] text-text-secondary ring-1 ring-white/[0.06] hover:bg-white/[0.06] hover:text-text-primary"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </AccordionSection>
 
-        <div className="grid grid-cols-2 gap-2">
-          <input value={filters.minFees} onChange={(e) => setFilters((f) => ({ ...f, minFees: e.target.value }))} placeholder="Min Fees" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-          <input value={filters.maxFees} onChange={(e) => setFilters((f) => ({ ...f, maxFees: e.target.value }))} placeholder="Max Fees" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-        </div>
+        {/* PLACEMENTS */}
+        <AccordionSection title="Placements">
+          <div className="space-y-1">
+            {placementOptions.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => update("minPlacement", filters.minPlacement === p.value ? "" : p.value)}
+                className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 font-body-md text-[13px] transition-all ${
+                  filters.minPlacement === p.value
+                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                    : "text-on-surface-variant hover:bg-white/[0.03] hover:text-on-surface"
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${filters.minPlacement === p.value ? "bg-primary" : "bg-white/20"}`} />
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </AccordionSection>
 
-        <select value={filters.minPlacement} onChange={(e) => setFilters((f) => ({ ...f, minPlacement: e.target.value }))} className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5">
-          <option value="">Placement: Any</option>
-          <option value="2000000">Above 20 LPA</option>
-          <option value="1000000">10-20 LPA</option>
-          <option value="500000">5-10 LPA</option>
-          <option value="100000">Below 5 LPA</option>
-        </select>
+        {/* RATING */}
+        <AccordionSection title="Rating">
+          <div className="flex flex-wrap gap-1.5">
+            {ratingOptions.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => update("minRating", filters.minRating === r.value ? "" : r.value)}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all duration-200 ${
+                  filters.minRating === r.value
+                    ? "bg-white text-black ring-1 ring-white"
+                    : "bg-white/[0.03] text-text-secondary ring-1 ring-white/[0.06] hover:bg-white/[0.06] hover:text-text-primary"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </AccordionSection>
 
-        <select value={filters.minRating} onChange={(e) => setFilters((f) => ({ ...f, minRating: e.target.value }))} className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5">
-          <option value="">Rating: Any</option>
-          <option value="4.5">4.5+</option>
-          <option value="4">4.0+</option>
-          <option value="3.5">3.5+</option>
-        </select>
+        {/* ACADEMICS */}
+        <AccordionSection title="Academics">
+          <div className="space-y-2">
+            <input
+              value={filters.course}
+              onChange={(e) => update("course", e.target.value)}
+              placeholder="Course (e.g. CSE)"
+              className="w-full rounded-xl glass-panel px-3 py-2.5 font-body-md text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all focus:ring-1 focus:ring-primary/50"
+            />
+            <input
+              value={filters.degree}
+              onChange={(e) => update("degree", e.target.value)}
+              placeholder="Degree (e.g. B.Tech)"
+              className="w-full rounded-xl glass-panel px-3 py-2.5 font-body-md text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+        </AccordionSection>
 
-        <div className="grid grid-cols-2 gap-2">
-          <input value={filters.minYear} onChange={(e) => setFilters((f) => ({ ...f, minYear: e.target.value }))} placeholder="Est. after" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-          <input value={filters.maxNirf} onChange={(e) => setFilters((f) => ({ ...f, maxNirf: e.target.value }))} placeholder="Max NIRF" className="w-full rounded-xl border border-border bg-surface2 px-3 py-2.5" />
-        </div>
+        {/* RANKINGS */}
+        <AccordionSection title="Rankings & Year">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block font-label-caps text-[9px] uppercase tracking-wider text-on-surface-variant/50">Est. after</label>
+              <input
+                value={filters.minYear}
+                onChange={(e) => update("minYear", e.target.value)}
+                placeholder="e.g. 2000"
+                className="w-full rounded-xl glass-panel px-3 py-2 font-body-md text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-label-caps text-[9px] uppercase tracking-wider text-on-surface-variant/50">Max NIRF</label>
+              <input
+                value={filters.maxNirf}
+                onChange={(e) => update("maxNirf", e.target.value)}
+                placeholder="e.g. 50"
+                className="w-full rounded-xl glass-panel px-3 py-2 font-body-md text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+          </div>
+        </AccordionSection>
       </div>
-
-      <button type="button" onClick={apply} className="mt-5 w-full rounded-[10px] bg-accent px-4 py-2.5 font-semibold text-white shadow-[0_10px_20px_rgba(108,99,255,0.35)] hover:brightness-110">Apply Filters</button>
     </aside>
   );
 }

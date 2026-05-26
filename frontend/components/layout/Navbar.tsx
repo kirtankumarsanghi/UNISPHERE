@@ -13,46 +13,47 @@ export function Navbar() {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/80 backdrop-blur-2xl">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent shadow-[0_8px_24px_rgba(108,99,255,0.45)]">
-            <span className="font-syne text-sm font-extrabold text-white">U</span>
-          </div>
-          <span className="font-syne text-xl font-extrabold tracking-tight text-text sm:text-2xl">
-            UNI<span className="text-accent">SPHERE</span>
-          </span>
+    <header className="sticky top-0 z-50 border-b border-white/5 bg-bg-base/75 backdrop-blur-2xl transition-all duration-300">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6 sm:py-6 lg:py-7">
+        <Link href="/" className="group flex items-center">
+          <img
+            src="/logo-transparent.png"
+            alt="Unisphere Logo"
+            className="h-12 w-auto object-contain brightness-110 contrast-125 drop-shadow-[0_0_12px_rgba(78,222,163,0.18)] transition-all duration-500 group-hover:scale-[1.04] group-hover:brightness-125 sm:h-14 lg:h-16"
+          />
         </Link>
 
-        <div className="hidden items-center gap-2 text-sm md:flex">
-          <Link href="/" className={`rounded-lg px-3 py-1.5 ${isActive("/") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Explore</Link>
-          <Link href="/compare" className={`rounded-lg px-3 py-1.5 ${isActive("/compare") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Compare</Link>
-          <Link href="/predictor" className={`rounded-lg px-3 py-1.5 ${isActive("/predictor") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Predictor</Link>
-          <Link href="/discussions" className={`rounded-lg px-3 py-1.5 ${isActive("/discussions") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Q&A</Link>
-          <Link href="/saved" className={`rounded-lg px-3 py-1.5 ${isActive("/saved") ? "bg-accent/15 text-accent" : "text-text hover:bg-surface2 hover:text-accent"}`}>Saved</Link>
+        <div className="hidden items-center gap-2 text-[17px] font-medium md:flex lg:text-[18px]">
+          <Link href="/" className={`relative px-4 py-2.5 transition-colors duration-300 ${isActive("/") ? "text-text-primary" : "text-text-secondary hover:text-text-primary"}`}>Explore{isActive("/") && <span className="absolute -bottom-[24px] left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white shadow-glow-sm" />}</Link>
+          <Link href="/compare" className={`relative px-4 py-2.5 transition-colors duration-300 ${isActive("/compare") ? "text-text-primary" : "text-text-secondary hover:text-text-primary"}`}>Compare{isActive("/compare") && <span className="absolute -bottom-[24px] left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white shadow-glow-sm" />}</Link>
+          <Link href="/predictor" className={`relative px-4 py-2.5 text-[20px] font-semibold transition-colors duration-300 lg:text-[21px] ${isActive("/predictor") ? "text-text-primary" : "text-text-secondary hover:text-text-primary"}`}>Predictor{isActive("/predictor") && <span className="absolute -bottom-[24px] left-1/2 h-[2px] w-7 -translate-x-1/2 rounded-full bg-white shadow-glow-sm" />}</Link>
+          <Link href="/quiz" className={`relative px-4 py-2.5 transition-colors duration-300 ${isActive("/quiz") ? "text-text-primary" : "text-text-secondary hover:text-text-primary"}`}>Quiz Match{isActive("/quiz") && <span className="absolute -bottom-[24px] left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white shadow-glow-sm" />}</Link>
+          <Link href="/discussions" className={`relative px-4 py-2.5 transition-colors duration-300 ${isActive("/discussions") ? "text-text-primary" : "text-text-secondary hover:text-text-primary"}`}>Q&A{isActive("/discussions") && <span className="absolute -bottom-[24px] left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-white shadow-glow-sm" />}</Link>
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           {session?.user ? (
             <>
-              <Link href="/saved" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface2 px-3 py-1.5 text-xs text-muted hover:border-accent hover:text-accent">
-                <Bookmark size={13} /> Saved
+              <Link href="/saved" className="group inline-flex items-center gap-1.5 rounded-full bg-white/[0.03] px-4 py-2 text-[13px] font-medium text-text-secondary ring-1 ring-white/10 transition-all duration-300 hover:bg-white/[0.08] hover:text-text-primary">
+                <Bookmark size={13} className="transition-transform group-hover:scale-110" /> Saved
               </Link>
-              <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5">
-                <User size={14} className="text-accent" />
-                <span className="text-sm text-text">{session.user.name ?? session.user.email}</span>
-              </div>
+              <Link href="/dashboard" className="flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-1.5 ring-1 ring-white/10 hover:bg-white/[0.08] transition-colors">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/20">
+                  <User size={12} className="text-blue-400" />
+                </div>
+                <span className="text-[13px] font-medium text-text-primary">{session.user.name ?? session.user.email}</span>
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="inline-flex items-center gap-1 rounded-[8px] border border-border px-3 py-1.5 text-sm text-muted hover:border-accent2 hover:text-accent2"
+                className="group inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium text-text-secondary transition-all duration-300 hover:bg-white/5 hover:text-text-primary"
               >
-                <LogOut size={14} /> Logout
+                <LogOut size={14} className="transition-transform group-hover:-translate-x-0.5" /> Logout
               </button>
             </>
           ) : (
             <>
-              <Link href="/auth/login" className="rounded-[8px] border border-border px-4 py-2 text-sm hover:border-accent hover:text-accent">Login</Link>
-              <Link href="/auth/signup" className="rounded-[8px] bg-accent px-4 py-2 text-sm font-semibold text-white hover:-translate-y-[1px] hover:bg-[#7c75ff]">Sign up</Link>
+              <Link href="/auth/login" className="rounded-full px-5 py-2 text-[13px] font-medium text-text-secondary transition-all duration-300 hover:text-text-primary hover:bg-white/5">Log in</Link>
+              <Link href="/auth/signup" className="rounded-full bg-white px-5 py-2 text-[13px] font-bold text-black transition-all duration-300 hover:bg-white/90 hover:scale-[1.02]">Sign up</Link>
             </>
           )}
         </div>
@@ -64,31 +65,31 @@ export function Navbar() {
 
       {open ? (
         <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)}>
-          <aside className="absolute right-0 top-0 h-full w-72 border-l border-border bg-bg p-5" onClick={(e) => e.stopPropagation()}>
+          <aside className="absolute right-0 top-0 h-full w-72 border-l border-border-subtle bg-bg-surface p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-6 flex items-center justify-between">
-              <p className="font-syne text-xl font-bold">Menu</p>
-              <button aria-label="Close menu" className="rounded-lg border border-border p-1.5" onClick={() => setOpen(false)}><X size={15} /></button>
+              <p className="font-display text-xl font-bold">Menu</p>
+              <button aria-label="Close menu" className="rounded-lg border border-border-subtle p-1.5" onClick={() => setOpen(false)}><X size={15} /></button>
             </div>
             <div className="space-y-2 text-sm">
-              <Link href="/" onClick={() => setOpen(false)} className="block rounded-lg border border-border bg-surface px-3 py-2">Explore</Link>
-              <Link href="/compare" onClick={() => setOpen(false)} className="block rounded-lg border border-border bg-surface px-3 py-2">Compare</Link>
-              <Link href="/predictor" onClick={() => setOpen(false)} className="block rounded-lg border border-accent/20 bg-accent/5 px-3 py-2 text-accent">Predictor</Link>
-              <Link href="/discussions" onClick={() => setOpen(false)} className="block rounded-lg border border-border bg-surface px-3 py-2">Q&A</Link>
-              <Link href="/saved" onClick={() => setOpen(false)} className="block rounded-lg border border-border bg-surface px-3 py-2">Saved</Link>
+              <Link href="/" onClick={() => setOpen(false)} className="block rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-text-primary">Explore</Link>
+              <Link href="/compare" onClick={() => setOpen(false)} className="block rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-text-primary">Compare</Link>
+              <Link href="/predictor" onClick={() => setOpen(false)} className="block rounded-lg border border-accent-muted bg-accent-muted/20 px-3 py-2 text-accent">Predictor</Link>
+              <Link href="/discussions" onClick={() => setOpen(false)} className="block rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-text-primary">Q&A</Link>
+              <Link href="/saved" onClick={() => setOpen(false)} className="block rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-text-primary">Saved</Link>
             </div>
             <div className="mt-6 grid gap-2">
               {session?.user ? (
                 <>
-                  <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 rounded-lg border border-border-subtle bg-bg-elevated px-3 py-2 text-sm text-text-primary">
                     <User size={14} className="text-accent" />
                     {session.user.name ?? session.user.email}
                   </div>
-                  <button onClick={() => { signOut({ callbackUrl: "/" }); setOpen(false); }} className="rounded-[8px] border border-border px-4 py-2 text-center text-sm text-accent2">Logout</button>
+                  <button onClick={() => { signOut({ callbackUrl: "/" }); setOpen(false); }} className="rounded-lg border border-border-subtle px-4 py-2 text-center text-sm text-red">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" onClick={() => setOpen(false)} className="rounded-[8px] border border-border px-4 py-2 text-center">Login</Link>
-                  <Link href="/auth/signup" onClick={() => setOpen(false)} className="rounded-[8px] bg-accent px-4 py-2 text-center font-semibold text-white">Sign up</Link>
+                  <Link href="/auth/login" onClick={() => setOpen(false)} className="rounded-lg border border-border-subtle px-4 py-2 text-center text-text-primary">Log in</Link>
+                  <Link href="/auth/signup" onClick={() => setOpen(false)} className="rounded-lg bg-accent px-4 py-2 text-center font-semibold text-white">Sign up</Link>
                 </>
               )}
             </div>

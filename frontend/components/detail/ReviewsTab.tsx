@@ -7,21 +7,25 @@ export function ReviewsTab({ reviews }: { reviews: Review[] }) {
 
   return (
     <section className="space-y-4">
-      <div className="rounded-2xl border border-border bg-surface p-4">
-        <p className="font-syne text-4xl font-extrabold tracking-tight text-accent3">{avg.toFixed(1)}</p>
-        <p className="text-sm text-muted">Average rating from {reviews.length} reviews</p>
+      <div className="rounded-[24px] bg-white/[0.02] p-8 ring-1 ring-white/5 transition-all duration-300 hover:ring-white/10">
+        <p className="font-mono text-5xl font-extrabold tracking-tighter text-text-primary">{avg.toFixed(1)}</p>
+        <p className="mt-2 text-[13px] font-medium text-text-muted">Average rating from {reviews.length} reviews</p>
       </div>
       {reviews.map((r) => (
-        <article key={r.id} className="rounded-2xl border border-border bg-surface p-4">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span className="font-syne text-base font-semibold text-text">{r.authorName}</span>
-            {r.batch ? <span className="rounded-full border border-border bg-surface2 px-2 py-0.5">Batch {r.batch}</span> : null}
-            {r.course ? <span className="rounded-full border border-border bg-surface2 px-2 py-0.5">{r.course}</span> : null}
-            <span className="rounded-full border border-accent3/40 bg-accent3/10 px-2 py-0.5 text-accent3">{r.rating.toFixed(1)}★</span>
+        <article key={r.id} className="rounded-[24px] bg-white/[0.02] p-6 ring-1 ring-white/5 transition-all duration-300 hover:bg-white/[0.04] hover:ring-white/10">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-display text-[15px] font-bold text-text-primary">{r.authorName}</span>
+            {r.batch && <span className="rounded-full bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-text-secondary ring-1 ring-white/10">Batch {r.batch}</span>}
+            {r.course && <span className="rounded-full bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-text-secondary ring-1 ring-white/10">{r.course}</span>}
+            <span className="ml-auto flex items-center gap-1 rounded-full bg-white/[0.03] px-2.5 py-1 font-mono text-[11px] font-bold text-text-primary ring-1 ring-white/10">
+              {r.rating.toFixed(1)} <span className="text-white/50">★</span>
+            </span>
           </div>
-          <h4 className="mt-2 font-semibold">{r.title}</h4>
-          <p className="mt-1 text-sm text-text/80">{r.content}</p>
-          <p className="mt-2 text-xs text-muted">Helpful: {r.helpful}</p>
+          <h4 className="mt-4 font-display text-lg font-bold text-text-primary">{r.title}</h4>
+          <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">{r.content}</p>
+          <div className="mt-6 flex items-center gap-2">
+            <span className="rounded-full bg-white/[0.03] px-3 py-1 text-[11px] font-medium text-text-muted ring-1 ring-white/5">Helpful: {r.helpful}</span>
+          </div>
         </article>
       ))}
     </section>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { savedComparisonSchema } from "@/lib/validators";
 
 export async function GET() {
   try {
@@ -22,10 +23,10 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { collegeIds, name } = await req.json();
-    if (!collegeIds || !Array.isArray(collegeIds) || collegeIds.length < 2) {
-      return NextResponse.json({ error: "At least 2 colleges required to save a comparison" }, { status: 400 });
-    }
+    const parsed = savedComparisonSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "At least 2 valid colleges are required" }, { status: 400 });
+
+    const { collegeIds, name } = parsed.data;
 
     const entry = await prisma.savedComparison.create({
       data: {

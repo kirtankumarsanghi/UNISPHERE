@@ -7,10 +7,10 @@ export function SubNav({ reviewCount }: { reviewCount: number }) {
   ];
 
   return (
-    <div className="sticky top-[57px] z-40 mb-6 border-b border-border bg-bg/90 backdrop-blur">
-      <div className="flex flex-wrap gap-4 py-3">
+    <div className="sticky top-[73px] z-40 mb-8 bg-bg-base/80 backdrop-blur-xl">
+      <div className="flex gap-6 border-b border-white/5 py-4 overflow-x-auto scrollbar-hide">
         {tabs.map((t) => (
-          <a key={t.id} href={`#${t.id}`} className="border-b-2 border-transparent pb-2 text-sm text-muted transition-all duration-200 hover:border-accent hover:text-accent">
+          <a key={t.id} href={`#${t.id}`} className="relative whitespace-nowrap text-[13px] font-bold text-text-muted transition-colors duration-200 hover:text-text-primary">
             {t.label}
           </a>
         ))}

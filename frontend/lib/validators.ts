@@ -14,6 +14,17 @@ export const compareIdsSchema = z.object({
   ids: z.string().min(1)
 });
 
+export const discussionCreateSchema = z.object({
+  title: z.string().trim().min(5).max(200),
+  content: z.string().trim().min(20).max(5000),
+  collegeId: z.string().min(1).optional().nullable()
+});
+
+export const savedComparisonSchema = z.object({
+  collegeIds: z.array(z.string().min(1)).min(2).max(3),
+  name: z.string().trim().min(2).max(120).optional().nullable()
+});
+
 export const collegesQuerySchema = z.object({
   q: z.string().optional(),
   type: z.string().optional(),

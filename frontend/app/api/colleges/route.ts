@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const {
     q = "", type, state, city, course, degree,
-    minFees = 0, maxFees = 2500000, minRating = 0, minPlacement = 0,
+    minFees = 0, maxFees = 10000000, minRating = 0, minPlacement = 0,
     minYear = 1900, maxNirf = 9999, sortBy = "rating", order = "desc", page = 1, limit = 12
   } = parsed.data;
 
@@ -43,11 +43,18 @@ export async function GET(req: NextRequest) {
       : { rating: order };
 
     const [colleges, total] = await Promise.all([
-      prisma.college.findMany({ where, include: { placements: true, courses: { select: { name: true, degree: true } } }, orderBy, skip: (safePage - 1) * safeLimit, take: safeLimit }),
+      prisma.college.findMany({
+        where,
+        include: { placements: true, courses: { select: { name: true, degree: true } }, _count: { select: { reviews: true } } },
+        orderBy,
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit
+      }),
       prisma.college.count({ where })
     ]);
 
-    return NextResponse.json({ colleges, total, page: safePage, totalPages: Math.ceil(total / safeLimit) });
+    const normalized = colleges.map((college) => ({ ...college, totalReviews: college._count.reviews }));
+    return NextResponse.json({ colleges: normalized, total, page: safePage, totalPages: Math.ceil(total / safeLimit) });
   } catch {
     const fallbackColleges = await getFallbackColleges();
     let data = fallbackColleges.filter((c) => {
