@@ -291,7 +291,7 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const features = [
-    { icon: BarChart3, title: "Real Placement Data", desc: "Verified salary data from 500+ colleges with avg, median, and highest packages.", href: "/", color: "from-emerald-500/20 to-emerald-500/5" },
+    { icon: BarChart3, title: "Real Placement Data", desc: "Verified salary data from 500+ colleges with avg, median, and highest packages.", href: "/roi-calculator", color: "from-emerald-500/20 to-emerald-500/5" },
     { icon: Brain, title: "Smart Predictor", desc: "Enter your rank and get personalized college recommendations with chance levels.", href: "/predictor", color: "from-blue-500/20 to-blue-500/5" },
     { icon: Scale, title: "Side-by-Side Compare", desc: "Compare up to 3 colleges on fees, placements, rankings, and courses.", href: "/compare", color: "from-violet-500/20 to-violet-500/5" },
     { icon: MessageCircle, title: "Community Q&A", desc: "Get answers from current students and alumni about admissions and campus life.", href: "/discussions", color: "from-amber-500/20 to-amber-500/5" },

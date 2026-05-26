@@ -30,32 +30,39 @@ export function AICampusGuide({ collegeName }: { collegeName: string }) {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = { id: Date.now().toString(), sender: 'user' as const, text: input };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    
+    setMessages(updatedMessages);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const lowerInput = userMessage.text.toLowerCase();
-      let aiText = `I'm just a demo AI right now, but normally I'd give you the inside scoop on ${collegeName}!`;
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updatedMessages, collegeName })
+      });
+
+      const data = await response.json();
       
-      if (lowerInput.includes('food') || lowerInput.includes('hostel') || lowerInput.includes('mess')) {
-        aiText = `From what students say, the hostel food is average. Breakfast is usually good (especially on dosa days!), but you might rely on the night canteen or Swiggy for dinner during exams.`;
-      } else if (lowerInput.includes('culture') || lowerInput.includes('code') || lowerInput.includes('club')) {
-        aiText = `The coding culture here is phenomenal. The primary tech club is very active, and you'll find people doing Leetcode or building projects in the library till 2 AM. There are also great cultural fests!`;
-      } else if (lowerInput.includes('placement') || lowerInput.includes('job') || lowerInput.includes('salary')) {
-        aiText = `Placements are solid, particularly for CS/IT branches where companies like Amazon and Microsoft visit. Core branches usually see mass recruiters, but many students opt for higher studies or off-campus tech roles.`;
-      } else if (lowerInput.includes('attendance') || lowerInput.includes('strict')) {
-        aiText = `They enforce a strict 75% attendance rule. You'll get debarred from exams if you fall short, so most students proxies or sleep in the back row during boring lectures!`;
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch AI response');
       }
 
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: aiText }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: data.text }]);
+    } catch (error: any) {
+      setMessages(prev => [...prev, { 
+        id: (Date.now() + 1).toString(), 
+        sender: 'ai', 
+        text: `Oops, something went wrong (${error.message}). Are you sure the Gemini API key is configured?` 
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

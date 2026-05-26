@@ -10,11 +10,21 @@ export default async function DashboardPage() {
   const savedColleges = allColleges.slice(0, 3); // Mock saved
   const recommendations = allColleges.slice(5, 7); // Mock recommendations
 
-  const applications = [
-    { id: 1, name: "IIT Bombay", course: "B.Tech Computer Science", status: "Submitted", date: "Oct 15", icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { id: 2, name: "NIT Trichy", course: "B.Tech ECE", status: "In Progress", date: "Due Nov 1", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
-    { id: 3, name: "BITS Pilani", course: "B.E. Computer Science", status: "Not Started", date: "Opens Dec", icon: FileText, color: "text-blue-400", bg: "bg-blue-500/10" },
-  ];
+  const appColleges = allColleges.slice(1, 4);
+  const applications = appColleges.map((college, idx) => {
+    const statuses = [
+      { status: "Submitted", date: "Oct 15", icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+      { status: "In Progress", date: "Due Nov 1", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
+      { status: "Not Started", date: "Opens Dec", icon: FileText, color: "text-blue-400", bg: "bg-blue-500/10" }
+    ];
+    const s = statuses[idx % statuses.length];
+    return {
+      id: college.id,
+      name: college.name,
+      course: college.courses?.[0]?.name || "B.Tech Computer Science",
+      ...s
+    };
+  });
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-bg-base">
@@ -134,7 +144,7 @@ export default async function DashboardPage() {
                       <h4 className="font-body-md font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">{college.name}</h4>
                       <p className="font-body-md text-[12px] text-on-surface-variant mt-0.5">{college.city}, {college.state}</p>
                       <div className="mt-2 flex items-center gap-2">
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 font-label-caps text-[9px] uppercase tracking-widest text-primary">92% Match</span>
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 font-label-caps text-[9px] uppercase tracking-widest text-primary">{Math.floor(88 + (college.name.length % 11))}% Match</span>
                       </div>
                     </div>
                   </div>
