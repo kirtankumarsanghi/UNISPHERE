@@ -361,7 +361,7 @@ export default function ROICalculatorPage() {
                     {breakEvenYear > 0 ? (
                       <p className="font-headline-md text-xl text-emerald-400">{breakEvenYear} Years</p>
                     ) : (
-                      <p className="font-headline-md text-xl text-amber-400">> 10 Years</p>
+                      <p className="font-headline-md text-xl text-amber-400">&gt; 10 Years</p>
                     )}
                     <p className="text-[11px] text-on-surface-variant">after graduation</p>
                   </div>

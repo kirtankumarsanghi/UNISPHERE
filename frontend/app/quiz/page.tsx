@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowRight, BrainCircuit, CheckCircle2, ChevronLeft, RefreshCw, Trophy, Target, Banknote, MapPin } from "lucide-react";
+import { ArrowRight, BrainCircuit, CheckCircle2, ChevronLeft, RefreshCw, Trophy, Target, Banknote, MapPin, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { fallbackColleges } from "@/lib/fallback-colleges";
 import { CollegeCard } from "@/components/college/CollegeCard";

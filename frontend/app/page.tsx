@@ -130,11 +130,11 @@ const getTopCourses = unstable_cache(
   async () => {
     const courses = await prisma.course.groupBy({
       by: ["name", "degree"],
-      _count: { _all: true },
-      orderBy: { _count: { _all: "desc" } },
+      _count: { name: true },
+      orderBy: { _count: { name: "desc" } },
       take: 8,
     });
-    return courses.map((course) => ({ name: course.name, degree: course.degree, count: course._count._all }));
+    return courses.map((course) => ({ name: course.name, degree: course.degree, count: course._count.name }));
   },
   ["top-courses"],
   { revalidate: 3600 }
