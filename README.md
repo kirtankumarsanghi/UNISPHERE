@@ -1,6 +1,6 @@
-# 🎓 CampusLens — College Discovery Platform
+# 🎓 Unisphere — College Discovery Platform
 
-> A production-grade college discovery and comparison platform built for students, by students. Search, compare, and decide — without the noise.
+> Search, compare, and decide on the right college — without the noise. Built for serious students, backed by real data.
 
 ![Next.js](https://img.shields.io/badge/Next.js_14-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
@@ -22,25 +22,27 @@
 - [API Reference](#api-reference)
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
+- [Seeding the Database](#seeding-the-database)
 - [Deployment](#deployment)
 - [Design Decisions & Tradeoffs](#design-decisions--tradeoffs)
-- [Edge Cases Handled](#edge-cases-handled)
+- [Known Issues & Roadmap](#known-issues--roadmap)
 - [Folder Structure](#folder-structure)
-- [Research & Competitive Analysis](#research--competitive-analysis)
 
 ---
 
 ## Overview
 
-CampusLens is a full-stack college discovery platform that allows students to search, filter, compare, and save colleges — all backed by a real PostgreSQL database with server-side rendering and authentication.
+**Unisphere** is a production-grade, full-stack college discovery platform built for Indian students navigating undergraduate and postgraduate admissions. It covers 177+ institutions — all 23 IITs, all 31 NITs, all 26 IIITs, 47 GFTIs, and top private/deemed universities — with real placement data, course details, student reviews, JEE/GATE/CAT cutoffs, and a rank-based college predictor.
 
-Built as part of a Full Stack Engineer evaluation (Track B — College Discovery Platform). The goal was to ship a cohesive, production-oriented MVP with clean architecture rather than excessive features.
+The platform is a monolith — Next.js handles both the frontend (React Server Components) and backend (API Routes). PostgreSQL via Neon is the database, with Prisma as the ORM.
 
-**Chosen Features (4 of 6):**
-1. College Listing + Search with filters and pagination
-2. College Detail Page (Overview, Courses, Placements, Reviews)
-3. Compare Colleges (side-by-side, up to 3)
-4. Authentication + Saved Items
+**Core Features Shipped:**
+1. College listing with full-text search, multi-dimensional filters, and URL-driven pagination
+2. College detail pages (Overview, Courses, Placements, Reviews, Cutoffs)
+3. Side-by-side college comparison (up to 3)
+4. College Predictor — rank-based admission chance estimator
+5. Q&A / Discussions — community questions and answers
+6. Authentication (email/password) + Saved Colleges + Saved Comparisons
 
 ---
 
@@ -48,13 +50,12 @@ Built as part of a Full Stack Engineer evaluation (Track B — College Discovery
 
 | Link | Description |
 |------|-------------|
-| 🌐 **[campuslens.vercel.app](https://campuslens.vercel.app)** | Production deployment |
-| 🎥 **[Loom Walkthrough](#)** | 5-min architecture + demo video |
-| 💻 **[GitHub Repository](https://github.com/yourusername/campuslens)** | Source code |
+| 🌐 **[unisphere.vercel.app](https://unisphere.vercel.app)** | Production deployment |
+| 💻 **[GitHub Repository](https://github.com/kirtankumarsanghi/unisphere)** | Source code |
 
 **Test credentials:**
 ```
-Email:    demo@campuslens.app
+Email:    demo@unisphere.app
 Password: demo1234
 ```
 
@@ -62,105 +63,131 @@ Password: demo1234
 
 ## Features
 
-### 🔍 College Listing + Search
-- Full-text search on college name, city, and state (case-insensitive, Prisma `contains`)
-- Filters: College Type, State, Annual Fees (range), Avg Placement Package, Rating
-- Sort by: Rating, Fees (low→high), Avg Package, Name (A→Z)
-- Server-side pagination (12 per page) with URL-driven state
-- Filter state persisted in URL search params — shareable links
+### 🔍 Explore — College Listing & Search
+- Full-text search across college name, city, state, and course names (case-insensitive via Prisma `contains`)
+- Filters: Type (IIT/NIT/IIIT/Government/Private/Deemed/Autonomous), State, City, Course, Degree, Annual Fees range, Min Avg Package, Min Rating, Est. Year, Max NIRF Rank
+- Sort by: Rating (default), Fees low→high, Avg Package, Name A→Z, Most Popular
+- Server-side pagination — 12 cards per page, URL-driven (shareable, back-button safe)
 - Skeleton loading states on every card
+- Fallback to in-memory data if database is unavailable
 
 ### 🏛️ College Detail Page
-- Overview tab: about text, key info (established, type, affiliation, website)
-- Courses tab: full table of degrees, durations, fees, seat count
-- Placements tab: avg/highest/median packages, placement %, top recruiters
-- Reviews tab: star ratings, batch/course info, paginated reviews
-- Sticky action sidebar: Save, Add to Compare, Share
-- Similar colleges recommendation (same type/state)
-- `generateMetadata` for full SEO support
+- **Overview tab** — about text, established year, type, website
+- **Courses tab** — degree, duration, annual fees, seat intake per course
+- **Placements tab** — avg/highest/median packages, placement %, top recruiters, year
+- **Reviews tab** — star ratings, batch/course info, author name
+- **Exam Cutoffs** — JEE Advanced, JEE Main, BITSAT, GATE, CAT closing ranks per course and category
+- Sticky action sidebar: Save college, Add to Compare, Share link
+- Similar colleges recommendation (same type, ranked by rating)
+- `generateMetadata` for full SEO — unique title and description per college
 
 ### ⚖️ Compare Colleges
-- Select up to 3 colleges via search modal
-- Side-by-side comparison table: General, Fees, Placements, Courses, Ratings
-- Best-value highlighting (green tint) per row: lowest fees, highest package, best rating
-- Sticky first column on mobile with horizontal scroll
-- Compare state managed in Zustand (persists across navigation)
+- Search and select up to 3 colleges via modal
+- Side-by-side table: Location, Type, Established, NIRF Rank, Fees, Total Cost, Avg/Highest/Median Package, Placement %, Degrees, Course Count, Rating, Reviews
+- Best-value highlighting per row: lowest fees, highest package, best rating
+- Save comparison to dashboard (requires login)
+- Compare state in Zustand — persists across navigation
 - Fixed compare tray on listing page showing selected colleges
+
+### 🎯 College Predictor
+- Input your exam (JEE Advanced / JEE Main / BITSAT / GATE / CAT), rank, and branch interest
+- Returns colleges where your rank falls within historical closing rank ranges
+- Groups results by college, shows matched courses and their closing ranks
+- Sorted by best-match (closest closing rank to your rank first)
+
+### 💬 Q&A / Discussions
+- Community questions — optionally linked to a specific college
+- Post answers (requires login)
+- Questions seeded per college (2 Q&A threads with answers per institution)
+- Paginated, ordered newest first
 
 ### 🔐 Authentication + Saved Items
 - Email/password signup and login via NextAuth v5 Credentials provider
 - Passwords hashed with bcryptjs (salt rounds: 12)
 - JWT session strategy
 - Protected `/saved` route via Next.js middleware
-- Save/unsave colleges with optimistic UI updates
-- Saved state hydrated from API on session start
+- Save/unsave colleges with optimistic UI (heart icon)
+- Saved state hydrated from `/api/saved` on session start via `SavedHydrator`
+- Save entire comparisons from the Compare page
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Why |
-|-------|------------|-----|
-| Frontend | Next.js 14 (App Router) | SSR, RSC, file-based routing, metadata API |
-| Language | TypeScript | Type safety across frontend + backend |
-| Styling | TailwindCSS | Utility-first, consistent design system |
-| State | Zustand | Lightweight, no boilerplate for compare/saved state |
-| Database | PostgreSQL (Neon) | Relational, free tier, serverless-compatible |
+| Layer | Technology | Reason |
+|-------|-----------|--------|
+| Framework | Next.js 14 (App Router) | SSR, RSC, file-based routing, metadata API, API routes |
+| Language | TypeScript (strict) | End-to-end type safety across all components and API routes |
+| Styling | TailwindCSS | Utility-first, consistent dark design system via CSS variables |
+| State | Zustand | Lightweight global state for compare tray and saved IDs |
+| Database | PostgreSQL (Neon) | Relational, serverless-compatible, free tier on Neon |
 | ORM | Prisma | Type-safe queries, excellent DX, migration support |
-| Auth | NextAuth v5 | Flexible, supports credentials + OAuth |
+| Auth | NextAuth v5 | Credentials provider, JWT sessions, middleware protection |
+| Validation | Zod | Schema validation on all API route inputs |
+| Icons | lucide-react | Tree-shakeable, consistent icon set |
+| Fonts | Cabinet Grotesk + DM Sans | Editorial display + clean body font pair |
 | Deployment | Vercel + Neon | Zero-config Next.js deploy, serverless Postgres |
-| Icons | lucide-react | Consistent, tree-shakeable icon set |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Vercel Edge                       │
-│  ┌─────────────────────────────────────────────┐    │
-│  │           Next.js 14 App Router              │    │
-│  │                                              │    │
-│  │  ┌──────────────┐    ┌───────────────────┐  │    │
-│  │  │ Server        │    │  Client Components│  │    │
-│  │  │ Components    │    │  (Islands)        │  │    │
-│  │  │               │    │                   │  │    │
-│  │  │ page.tsx      │    │ SearchBar.tsx      │  │    │
-│  │  │ [id]/page.tsx │    │ FilterSidebar.tsx  │  │    │
-│  │  │ compare/      │    │ CompareTray.tsx    │  │    │
-│  │  │ saved/        │    │ SaveButton.tsx     │  │    │
-│  │  └──────┬────────┘    └────────┬──────────┘  │    │
-│  │         │                      │              │    │
-│  │         ▼                      ▼              │    │
-│  │  ┌─────────────────────────────────────┐     │    │
-│  │  │         Next.js API Routes           │     │    │
-│  │  │  /api/colleges     (search/filter)  │     │    │
-│  │  │  /api/colleges/[id] (detail)        │     │    │
-│  │  │  /api/colleges/compare              │     │    │
-│  │  │  /api/saved         (CRUD)          │     │    │
-│  │  │  /api/auth/[...nextauth]            │     │    │
-│  │  └──────────────────┬──────────────────┘     │    │
-│  └─────────────────────┼────────────────────────┘    │
-└────────────────────────┼─────────────────────────────┘
-                         │ Prisma Client
-                         ▼
-              ┌─────────────────────┐
-              │   Neon PostgreSQL   │
-              │                     │
-              │  colleges           │
-              │  courses            │
-              │  placements         │
-              │  reviews            │
-              │  users              │
-              │  saved_colleges     │
-              └─────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                     Vercel Edge                       │
+│  ┌──────────────────────────────────────────────┐    │
+│  │          Next.js 14 App Router                │    │
+│  │                                               │    │
+│  │  ┌─────────────────┐  ┌────────────────────┐ │    │
+│  │  │ Server Components│  │ Client Components  │ │    │
+│  │  │ (initial render) │  │ (interactive islands│ │    │
+│  │  │                  │  │                    │ │    │
+│  │  │ app/page.tsx     │  │ SearchBar.tsx       │ │    │
+│  │  │ colleges/[slug]/ │  │ FilterSidebar.tsx   │ │    │
+│  │  │ saved/page.tsx   │  │ CompareTray.tsx     │ │    │
+│  │  └────────┬─────────┘  └──────────┬─────────┘ │    │
+│  │           │                       │            │    │
+│  │           ▼                       ▼            │    │
+│  │  ┌──────────────────────────────────────────┐  │    │
+│  │  │            Next.js API Routes             │  │    │
+│  │  │  /api/colleges          (search/filter)  │  │    │
+│  │  │  /api/colleges/[id]     (detail)         │  │    │
+│  │  │  /api/colleges/compare  (batch fetch)    │  │    │
+│  │  │  /api/colleges/suggestions (autocomplete)│  │    │
+│  │  │  /api/predictor         (rank lookup)    │  │    │
+│  │  │  /api/discussions       (Q&A CRUD)       │  │    │
+│  │  │  /api/saved             (save/unsave)    │  │    │
+│  │  │  /api/saved-comparisons (comparisons)    │  │    │
+│  │  │  /api/auth/[...nextauth]                 │  │    │
+│  │  │  /api/auth/signup                        │  │    │
+│  │  │  /api/health + /api/ready               │  │    │
+│  │  └────────────────────┬─────────────────────┘  │    │
+│  └───────────────────────┼──────────────────────┘  │    │
+└──────────────────────────┼───────────────────────────┘
+                           │ Prisma Client
+                           ▼
+               ┌─────────────────────┐
+               │    Neon PostgreSQL   │
+               │                     │
+               │  College            │
+               │  Course             │
+               │  Placement          │
+               │  Review             │
+               │  ExamCutoff         │
+               │  Question           │
+               │  Answer             │
+               │  User               │
+               │  SavedCollege       │
+               │  SavedComparison    │
+               └─────────────────────┘
 ```
 
 **Key architectural decisions:**
-- Server Components for initial data fetching (no client-side waterfall on load)
-- Client Components only where interactivity is needed (search, filters, compare tray)
-- URL as source of truth for filter/search/page state — supports back button, sharing
-- Zustand for cross-page state (compare tray, saved IDs) that doesn't belong in URL
+- Server Components fetch initial data directly via Prisma — no client-side waterfall on first load
+- Client Components only where interactivity is needed (search, filters, compare tray, save button)
+- URL as single source of truth for filter/search/page state — supports back button and shareable links
+- Zustand for cross-page ephemeral state (compare tray contents, saved college IDs) that lives in memory
+- Graceful fallback: if DB is unreachable, the listing and detail pages fall back to a static in-memory dataset (`lib/fallback-colleges.ts`) so the app never shows a blank error page
 
 ---
 
@@ -168,169 +195,131 @@ Password: demo1234
 
 ```prisma
 model College {
-  id            String      @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String
-  slug          String      @unique
+  slug          String        @unique
   abbreviation  String
+  location      String
   city          String
   state         String
   type          CollegeType
   established   Int
   annualFees    Int
   rating        Float
-  overview      String      @db.Text
-  gradientFrom  String
-  gradientTo    String
+  totalReviews  Int           @default(0)
+  overview      String        @db.Text
+  gradientFrom  String        @default("#1e1b4b")
+  gradientTo    String        @default("#312e81")
   nirf          Int?
+  website       String?
+  image         String?
   courses       Course[]
   placements    Placement?
   reviews       Review[]
   savedBy       SavedCollege[]
-}
-
-model Course {
-  id          String  @id @default(cuid())
-  name        String
-  degree      String
-  duration    String
-  annualFees  Int
-  totalSeats  Int
-  college     College @relation(fields: [collegeId], references: [id])
-  collegeId   String
-}
-
-model Placement {
-  id               String   @id @default(cuid())
-  avgPackage       Int
-  highestPackage   Int
-  medianPackage    Int
-  placementPercent Int
-  topRecruiters    String[]
-  year             Int
-  college          College  @relation(fields: [collegeId], references: [id])
-  collegeId        String   @unique
-}
-
-model Review {
-  id         String   @id @default(cuid())
-  rating     Float
-  title      String
-  content    String   @db.Text
-  authorName String
-  batch      String?
-  course     String?
-  helpful    Int      @default(0)
-  college    College  @relation(fields: [collegeId], references: [id])
-  collegeId  String
-  createdAt  DateTime @default(now())
-}
-
-model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String?
-  password      String
-  savedColleges SavedCollege[]
-  createdAt     DateTime       @default(now())
-}
-
-model SavedCollege {
-  id        String  @id @default(cuid())
-  userId    String
-  collegeId String
-  user      User    @relation(fields: [userId], references: [id])
-  college   College @relation(fields: [collegeId], references: [id])
-  @@unique([userId, collegeId])
+  questions     Question[]
+  cutoffs       ExamCutoff[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum CollegeType {
-  IIT
-  NIT
-  IIIT
-  GOVERNMENT
-  PRIVATE
-  DEEMED
-  AUTONOMOUS
+  IIT | NIT | IIIT | GOVERNMENT | PRIVATE | DEEMED | AUTONOMOUS
 }
+
+model ExamCutoff {
+  id          String  @id @default(cuid())
+  examName    String  // "JEE Advanced" | "JEE Main" | "BITSAT" | "GATE" | "CAT"
+  courseName  String
+  category    String  @default("GENERAL")
+  closingRank Int
+  year        Int     @default(2024)
+  college     College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  collegeId   String
+}
+
+// ... Course, Placement, Review, User, SavedCollege, SavedComparison, Question, Answer
+// See frontend/prisma/schema.prisma for full schema
 ```
 
 ---
 
 ## API Reference
 
-### `GET /api/colleges`
+### Colleges
 
-Returns paginated, filtered college listings.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/colleges` | List colleges with filters, sort, pagination |
+| `GET` | `/api/colleges/[id]` | Single college detail by ID or slug |
+| `GET` | `/api/colleges/compare?ids=a,b,c` | Fetch up to 3 colleges by ID for comparison |
+| `GET` | `/api/colleges/suggestions?q=query` | Autocomplete suggestions (up to 8) |
 
-**Query Parameters:**
+**`GET /api/colleges` Query Parameters:**
 
-| Param | Type | Description | Example |
-|-------|------|-------------|---------|
-| `q` | string | Search query (name, city, state) | `?q=IIT` |
-| `type` | string | College type enum | `?type=IIT` |
-| `state` | string | State name | `?state=Maharashtra` |
-| `minFees` | number | Minimum annual fees | `?minFees=100000` |
-| `maxFees` | number | Maximum annual fees | `?maxFees=500000` |
-| `minRating` | number | Minimum rating | `?minRating=4.0` |
-| `minPlacement` | number | Min avg placement pkg | `?minPlacement=1000000` |
-| `sortBy` | string | Sort field | `?sortBy=rating` |
-| `order` | string | `asc` or `desc` | `?order=desc` |
-| `page` | number | Page number (default: 1) | `?page=2` |
-| `limit` | number | Results per page (default: 12) | `?limit=9` |
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `q` | string | — | Full-text search (name, city, state, courses) |
+| `type` | string | — | IIT / NIT / IIIT / GOVERNMENT / PRIVATE / DEEMED / AUTONOMOUS |
+| `state` | string | — | Exact state name |
+| `city` | string | — | Partial city match |
+| `course` | string | — | Partial course name match |
+| `degree` | string | — | Partial degree match (B.Tech, MBA) |
+| `minFees` | number | 0 | Minimum annual fees (₹) |
+| `maxFees` | number | 10000000 | Maximum annual fees (₹) |
+| `minRating` | number | 0 | Minimum rating (0–5) |
+| `minPlacement` | number | 0 | Minimum avg package (₹) |
+| `minYear` | number | 1900 | Minimum establishment year |
+| `maxNirf` | number | 9999 | Maximum NIRF rank |
+| `sort` | string | `rating_desc` | `rating_desc`, `fees_asc`, `placement_desc`, `name_asc`, `popular_desc` |
+| `page` | number | 1 | Page number |
+| `limit` | number | 12 | Results per page |
 
-**Response:**
-```json
-{
-  "colleges": [...],
-  "total": 48,
-  "page": 1,
-  "totalPages": 4
-}
-```
+### Predictor
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/predictor?exam=X&rank=Y&interest=Z` | Colleges matching rank+exam, grouped by college |
 
-### `GET /api/colleges/[id]`
+**Parameters:**
 
-Returns full college detail by ID or slug.
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `exam` | string | ✅ | JEE Advanced / JEE Main / BITSAT / GATE / CAT |
+| `rank` | number | ✅ | Student's rank (closing rank must be ≥ this) |
+| `interest` | string | — | Branch/course keyword filter |
 
-**Response:** Full college object including courses, placements, reviews.
+### Discussions
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/discussions?collegeId=X` | All questions (optionally filtered by college) |
+| `POST` | `/api/discussions` | Post new question (auth required) |
+| `POST` | `/api/discussions/[id]/answer` | Post answer to a question (auth required) |
 
-### `GET /api/colleges/compare`
+### Saved
 
-Returns multiple colleges for comparison.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/saved` | Returns array of saved college IDs for session user |
+| `POST` | `/api/saved` | Save a college `{ collegeId }` |
+| `DELETE` | `/api/saved` | Unsave a college `{ collegeId }` |
+| `GET` | `/api/saved-comparisons` | List saved comparisons |
+| `POST` | `/api/saved-comparisons` | Save comparison `{ collegeIds[], name }` |
 
-**Query Parameters:**
+### Auth
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `ids` | string | Comma-separated college IDs | `?ids=clx1,clx2,clx3` |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/signup` | Register `{ name, email, password }` — validated with Zod |
+| `*` | `/api/auth/[...nextauth]` | NextAuth v5 handler (login, session, signout) |
 
----
+### Health
 
-### `GET /api/saved` *(Auth required)*
-
-Returns saved college IDs for the current user.
-
----
-
-### `POST /api/saved` *(Auth required)*
-
-Save a college.
-
-**Body:** `{ "collegeId": "clx123..." }`
-
-**Responses:** `201 Created` / `409 Conflict` (already saved) / `401 Unauthorized`
-
----
-
-### `DELETE /api/saved` *(Auth required)*
-
-Remove a saved college.
-
-**Body:** `{ "collegeId": "clx123..." }`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Returns `{ status: "ok" }` — no DB dependency |
+| `GET` | `/api/ready` | Returns `{ status: "ready" }` if DB is reachable |
 
 ---
 
@@ -338,15 +327,15 @@ Remove a saved college.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js ≥ 18.17
 - npm or yarn
-- A PostgreSQL database (free at [neon.tech](https://neon.tech))
+- PostgreSQL database (local or [Neon](https://neon.tech) free tier)
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/campuslens.git
-cd campuslens
+git clone https://github.com/kirtankumarsanghi/unisphere.git
+cd unisphere/frontend
 ```
 
 ### 2. Install dependencies
@@ -355,29 +344,33 @@ cd campuslens
 npm install
 ```
 
-### 3. Set up environment variables
+### 3. Configure environment variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Fill in your values (see [Environment Variables](#environment-variables) below).
+Fill in the values — see [Environment Variables](#environment-variables) below.
 
-### 4. Push database schema
+### 4. Generate the fallback data file
+
+> This step is required before seeding. The script reads the college list and writes `lib/fallback-colleges.ts`, which is used both as a DB seed source and as an in-memory fallback if the database is unavailable.
 
 ```bash
+node script.js
+```
+
+### 5. Push the Prisma schema and seed
+
+```bash
+# Apply schema to your database
 npx prisma db push
+
+# Seed the database (177+ colleges, courses, placements, reviews, cutoffs, Q&A)
+npx prisma db seed
 ```
 
-### 5. Seed the database
-
-```bash
-npm run db:seed
-```
-
-This seeds 20 Indian colleges with realistic data including courses, placements, and reviews.
-
-### 6. Start the development server
+### 6. Run the development server
 
 ```bash
 npm run dev
@@ -389,195 +382,232 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment Variables
 
-Create a `.env.local` file in the root:
+Create a `.env.local` file in `/frontend` with the following:
 
 ```env
-# Database — get from neon.tech (free tier)
+# Database — Neon PostgreSQL connection string (or any PostgreSQL URL)
 DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
 
-# NextAuth — generate with: openssl rand -base64 32
-NEXTAUTH_SECRET="your-32-char-random-secret"
+# NextAuth — generate a random secret: openssl rand -base64 32
+NEXTAUTH_SECRET="your-secret-here"
 
-# Base URL
+# NextAuth URL — your app's public URL (localhost for dev)
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-For production, add these same variables in your Vercel dashboard under **Settings → Environment Variables**.
+**Neon setup (recommended):**
+1. Go to [neon.tech](https://neon.tech) and create a free project
+2. Copy the connection string from the dashboard
+3. Paste into `DATABASE_URL`
+
+---
+
+## Seeding the Database
+
+The seed script at `frontend/prisma/seed.ts` populates:
+
+| Entity | Count |
+|--------|-------|
+| Colleges | 177 |
+| Courses | 7 per college (1,239 total) |
+| Placements | 1 per college (177 total) |
+| Reviews | 3 per college (531 total) |
+| Exam Cutoffs | 5–7 per college (~1,000 total) |
+| Q&A Questions | 2 per college (354 total) |
+| Answers | 2 per question (708 total) |
+
+**Institution breakdown:**
+- 23 IITs (all, from IIT Kharagpur 1951 to IIT Goa 2016)
+- 31 NITs (all, including all northeastern NITs)
+- 26 IIITs (autonomous, centrally funded, and all PPP-model)
+- 47 GFTIs (Wikipedia-verified JoSAA 2025-26 list)
+- 50+ top private, deemed, and autonomous colleges
+
+**Run seed:**
+```bash
+# From frontend/ directory
+npx prisma db seed
+```
+
+**Reset and re-seed:**
+```bash
+npx prisma db push --force-reset
+node script.js
+npx prisma db seed
+```
+
+> **Note**: The seed always deletes all existing data before inserting. It's safe to re-run.
 
 ---
 
 ## Deployment
 
-### Deploy to Vercel + Neon (Recommended)
+### Vercel + Neon (recommended)
 
-**Step 1 — Create Neon database**
-1. Go to [neon.tech](https://neon.tech) → Sign up free
-2. Create a new project
-3. Copy the connection string from the dashboard
+1. Push the `frontend/` directory to a GitHub repository
+2. Import the project in [Vercel](https://vercel.com)
+3. Set the root directory to `frontend`
+4. Add environment variables in the Vercel dashboard:
+   - `DATABASE_URL` — your Neon connection string
+   - `NEXTAUTH_SECRET` — random secret
+   - `NEXTAUTH_URL` — your Vercel deployment URL (e.g. `https://unisphere.vercel.app`)
+5. Add a build command override if needed: `npm run build`
+6. Deploy
 
-**Step 2 — Deploy to Vercel**
+**Post-deploy database setup:**
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
+# From your local machine, pointing to the Neon production DB
+DATABASE_URL="your-neon-url" node script.js
+DATABASE_URL="your-neon-url" npx prisma db push
+DATABASE_URL="your-neon-url" npx prisma db seed
 ```
 
-Or connect your GitHub repo at [vercel.com](https://vercel.com) for automatic deployments on push.
-
-**Step 3 — Add environment variables**
-
-In Vercel dashboard → Settings → Environment Variables, add:
-- `DATABASE_URL`
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL` (your production URL)
-
-**Step 4 — Run migrations + seed**
-```bash
-# With production DATABASE_URL set locally
-npx prisma db push
-npm run db:seed
-```
-
-### npm Scripts
+### Self-hosted / Docker
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # prisma generate + next build
-npm run start        # Start production server
-npm run db:push      # Push schema to database
-npm run db:seed      # Seed 20 colleges
-npm run db:studio    # Open Prisma Studio (visual DB browser)
-npm run db:reset     # Reset DB and re-seed
+# Build
+cd frontend
+npm run build
+
+# Start
+npm start
 ```
+
+Ensure `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` are set in your environment.
 
 ---
 
 ## Design Decisions & Tradeoffs
 
-### 1. URL as filter state (not React state)
-Filter values live in URL search params, not `useState`. This means filters survive page refresh, support browser back/forward, and produce shareable links. Tradeoff: slightly more complex routing logic with `useRouter` and `useSearchParams`.
+### Server Components for data fetching
+The listing page (`app/page.tsx`) and college detail page (`app/colleges/[slug]/page.tsx`) are React Server Components that query Prisma directly. This eliminates client-side data waterfall on load, improves SEO (full HTML on first byte), and avoids a redundant API round-trip for initial data. Client components fetch via API routes only for interactivity (save, search autocomplete, compare).
 
-### 2. Server Components for listing pages
-The college listing page is a Server Component that fetches data at request time. This gives fast first paint and zero loading spinners for the initial view. Only the search input and filter sidebar are Client Components (they need event handlers). Tradeoff: any filter change triggers a full server round-trip instead of a client-side re-filter.
+### URL as source of truth for filters
+All filter state (type, state, fees range, rating, sort, page) lives in URL search params. This means filter state survives page refresh, is shareable, and works with the browser back button natively. Zustand is used only for ephemeral cross-page state (compare tray, saved IDs) that doesn't belong in URLs.
 
-### 3. Zustand for compare + saved state
-Compare tray state (which colleges are selected) and saved IDs are stored in Zustand rather than URL or React context. This lets the compare tray persist as users navigate between listing and detail pages. Tradeoff: state is lost on full page refresh (acceptable for a compare tray).
+### Fallback data layer
+If the database is unreachable (cold start, network error, Neon free tier sleep), the app falls back to `lib/fallback-colleges.ts` — a static in-memory dataset generated by `script.js`. This ensures the listing, search, filters, and college detail pages always render real content instead of blank error states. The fallback is limited (no reviews, no cutoffs, minimal course data) but far better than a 500 error.
 
-### 4. Prisma `contains` search (not full-text)
-Search uses Prisma's `contains` with `mode: 'insensitive'` rather than PostgreSQL full-text search (`tsvector`). This is simpler and fast enough for the dataset size (~1,200 colleges). For production scale, migrating to `pg_trgm` or a dedicated search service (Algolia, Meilisearch) would be the next step.
+### Prisma in Next.js — singleton pattern
+`lib/prisma.ts` uses the global singleton pattern to prevent multiple Prisma Client instances in Next.js hot reload:
+```ts
+const globalForPrisma = global as typeof global & { prisma?: PrismaClient };
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+```
 
-### 5. Mock data with realistic values
-All college data is seeded from `prisma/seed.ts` rather than scraped. This keeps the app legally clean and gives full control over data shape. 20 well-seeded colleges demonstrate all features effectively.
+### `totalReviews` denormalization
+`College.totalReviews` is a cached count stored on the college row and set at seed time. It is not auto-updated when users post new reviews via the API. This is a known tradeoff — for seed data it's correct, but real user-submitted reviews won't update this count unless you add a Prisma `$transaction` that increments it on review create. The count displayed in UI cards comes from this field, not a live `_count` query, to avoid the N+1 JOIN on listing pages.
 
-### 6. bcryptjs with 12 salt rounds
-Secure enough for the use case without being slow. NextAuth JWT strategy avoids a database lookup on every request.
+### Why no `backend/` service
+The project is a Next.js monolith. The `backend/` folder in the repo root contains only a `README.md` and a `prisma/` copy — it is not a running service. All data access happens through Next.js API Routes in `frontend/app/api/`. This was a deliberate simplification for the MVP scope.
 
 ---
 
-## Edge Cases Handled
+## Known Issues & Roadmap
 
-| Scenario | Handling |
-|----------|----------|
-| Compare tray full (3 colleges selected) | Toast: "Max 3 colleges for comparison" — button disabled |
-| Duplicate save attempt | API returns `409 Conflict`, frontend shows "Already saved" |
-| Compare page with no colleges selected | Empty state with "Add colleges to compare" prompt |
-| College not found (bad ID/slug) | `notFound()` → Next.js 404 page |
-| Filter returns 0 results | Empty state with "Clear filters" CTA |
-| Invalid pagination page (e.g. page=999) | Clamped to last valid page |
-| Unauthenticated save attempt | Redirected to `/auth/login?callbackUrl=/saved` |
-| Missing placement data | Metric cells show "N/A" gracefully |
-| Long college names in compare table | Truncated with CSS `line-clamp-2`, full name on hover |
-| API error on filter | Error boundary + "Something went wrong. Try again." |
-| Concurrent save/unsave clicks | Request debounced, optimistic update reverted on failure |
+### Known Issues
+
+| # | Issue | Location | Fix |
+|---|-------|----------|-----|
+| 1 | `₹` symbol may render as `?` if file encoding is wrong | `lib/utils.ts` | Ensure file is saved as UTF-8; replace `?` literals with `₹` |
+| 2 | `totalReviews` not updated on new user review | `api/saved`, reviews flow | Add `college.update({ data: { totalReviews: { increment: 1 } } })` on review create |
+| 3 | Q&A discussion cards appear blank | `discussions/page.tsx` | Explicit `text-[color]` on all text elements — no `color: inherit` on dark backgrounds |
+| 4 | Predictor has no fallback when DB is down | `api/predictor/route.ts` | Add fallback rank estimation from `fallbackColleges` |
+| 5 | `maxFees` filter default caps at ₹25L | `app/page.tsx` line 1655 | Change default from `2500000` to `10000000` to include Plaksha/Ashoka |
+| 6 | Discussions input has no length validation | `api/discussions/route.ts` | Add `title.length <= 200 && content.length <= 5000` check or Zod schema |
+| 7 | Compare page has duplicate table logic | `compare/page.tsx` + `CompareTable.tsx` | Remove inline rows from `compare/page.tsx`, use `<CompareTable />` component only |
+
+### Roadmap
+
+- [ ] Exam cutoffs tab on college detail page (UI for `ExamCutoff` data already seeded)
+- [ ] OAuth login (Google) alongside credentials
+- [ ] College reviews — allow authenticated users to submit reviews via UI
+- [ ] Predictor: category-wise cutoffs (OBC/SC/ST/EWS)
+- [ ] NIRF ranking history chart on college detail page
+- [ ] Advanced predictor: confidence bands (safe/moderate/ambitious tiers)
+- [ ] Email verification on signup
+- [ ] Rate limiting on auth routes via `lib/rate-limit.ts` (module exists, not yet wired)
+- [ ] Discussions pagination (currently loads all questions at once)
+- [ ] College image upload / official logo integration
+- [ ] Mobile app (React Native with shared API layer)
 
 ---
 
 ## Folder Structure
 
 ```
-campuslens/
+frontend/
 ├── app/
-│   ├── layout.tsx               # Root layout, fonts, providers
-│   ├── page.tsx                 # Home — college listing (Server Component)
-│   ├── error.tsx                # Root error boundary
-│   ├── not-found.tsx            # 404 page
-│   ├── colleges/
-│   │   └── [id]/
-│   │       └── page.tsx         # College detail page
-│   ├── compare/
-│   │   └── page.tsx             # Compare page (Client Component)
-│   ├── saved/
-│   │   └── page.tsx             # Saved colleges (protected)
-│   ├── auth/
-│   │   ├── login/page.tsx
-│   │   └── signup/page.tsx
-│   └── api/
-│       ├── colleges/
-│       │   ├── route.ts         # GET: search + filter + paginate
-│       │   ├── [id]/route.ts    # GET: college detail
-│       │   └── compare/route.ts # GET: ?ids=...
-│       ├── saved/route.ts       # GET/POST/DELETE
-│       └── auth/[...nextauth]/route.ts
+│   ├── page.tsx                    # Explore / listing page (Server Component)
+│   ├── layout.tsx                  # Root layout, fonts, providers
+│   ├── globals.css                 # CSS variables, base styles
+│   ├── api/
+│   │   ├── colleges/               # GET list, GET detail, GET compare, GET suggestions
+│   │   ├── predictor/              # GET rank-based college recommendations
+│   │   ├── discussions/            # GET/POST questions, POST answers
+│   │   ├── saved/                  # GET/POST/DELETE saved colleges
+│   │   ├── saved-comparisons/      # GET/POST saved comparisons
+│   │   ├── auth/                   # NextAuth handler + signup
+│   │   ├── health/                 # Liveness check
+│   │   └── ready/                  # Readiness check (DB ping)
+│   ├── colleges/[slug]/page.tsx    # College detail (Server Component)
+│   ├── compare/page.tsx            # Compare page (Client Component)
+│   ├── predictor/page.tsx          # Predictor page
+│   ├── discussions/page.tsx        # Q&A page
+│   ├── saved/page.tsx              # Saved colleges + comparisons
+│   └── auth/login/ + signup/       # Auth pages
+│
 ├── components/
-│   ├── ui/                      # Button, Badge, Input, Skeleton, etc.
-│   ├── layout/                  # Navbar, Footer, MobileFilterSheet
-│   ├── college/                 # CollegeCard, FilterSidebar, SearchBar, etc.
-│   ├── detail/                  # CollegeHero, SubNav, tab components
-│   ├── compare/                 # CollegeSelector, CompareTable
-│   └── auth/                    # LoginForm, SignupForm
+│   ├── college/                    # CollegeCard, FilterSidebar, SearchBar,
+│   │                               # CompareTray, SortDropdown, Pagination
+│   ├── compare/                    # CollegeSelector, CompareTable, CompareHighlight
+│   ├── detail/                     # CollegeHero, SubNav, OverviewTab, CoursesTab,
+│   │                               # PlacementsTab, ReviewsTab, DetailSidebar, SimilarColleges
+│   ├── auth/                       # LoginForm, SignupForm
+│   ├── layout/                     # Navbar, Footer, MobileFilterSheet
+│   ├── providers/                  # AppProviders, AuthProvider, ToastProvider, SavedHydrator
+│   └── ui/                         # Badge, Button, Input, Skeleton, EmptyState, RatingPill
+│
 ├── hooks/
-│   ├── useCompare.ts            # Zustand store
-│   ├── useSaved.ts              # Zustand store
-│   └── useDebounce.ts
+│   ├── useCompare.ts               # Zustand compare tray state
+│   ├── useSaved.ts                 # Zustand saved college IDs
+│   └── useDebounce.ts              # Debounce hook for search
+│
 ├── lib/
-│   ├── prisma.ts                # Prisma client singleton
-│   ├── auth.ts                  # NextAuth config
-│   └── utils.ts                 # formatFees, formatPackage, cn()
+│   ├── prisma.ts                   # Prisma client singleton
+│   ├── auth.ts                     # NextAuth config
+│   ├── utils.ts                    # formatFees, formatPackage, getBestValue
+│   ├── validators.ts               # Zod schemas for all API inputs
+│   ├── rate-limit.ts               # Rate limiter (defined, not yet wired to routes)
+│   ├── fallback-loader.ts          # Async loader for fallback-colleges.ts
+│   └── fallback-colleges.ts        # ⚠️ Generated by script.js — do not edit manually
+│
 ├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
-├── middleware.ts                 # Protect /saved route
-├── tailwind.config.ts
-├── .env.example
-└── README.md
+│   ├── schema.prisma               # Full database schema
+│   └── seed.ts                     # Seed script (177 colleges, all related data)
+│
+├── types/
+│   └── next-auth.d.ts              # NextAuth session + JWT type extensions
+│
+├── script.js                       # ⚠️ Run BEFORE seeding — generates fallback-colleges.ts
+├── middleware.ts                   # Protects /saved route, redirects to /auth/login
+├── tailwind.config.ts              # CSS variable tokens, font families
+├── next.config.js
+├── tsconfig.json
+└── package.json
 ```
-
----
-
-## Research & Competitive Analysis
-
-Before building, I analyzed Careers360, CollegeDunia, Levels.fyi, and AmbitionBox.
-
-| Feature | Careers360 | CollegeDunia | CampusLens |
-|---------|-----------|--------------|------------|
-| College Search | ✅ | ✅ | ✅ |
-| Filters (type, fees, location) | ✅ | ✅ | ✅ |
-| College Detail Page | ✅ | ✅ | ✅ |
-| Placements Data | ✅ | ✅ | ✅ |
-| Side-by-side Compare | ✅ | ✅ | ✅ |
-| Best-value Highlighting | ❌ | ❌ | ✅ |
-| Rank Predictor | ✅ | ✅ | ❌ (not in scope) |
-| Q&A / Forums | ✅ | ✅ | ❌ (not in scope) |
-| Auth + Saved Colleges | ✅ | ✅ | ✅ |
-| URL-shareable filters | ❌ | ❌ | ✅ |
-| Mobile-first design | Partial | Partial | ✅ |
-| Ad-free experience | ❌ | ❌ | ✅ |
-| Fast initial load (SSR) | ❌ (slow) | ❌ (slow) | ✅ |
-
-**Key observations from research:**
-- Both Careers360 and CollegeDunia have extremely slow, ad-heavy experiences
-- Filter state is not preserved in URL (no shareable filter links)
-- Compare tables don't highlight best values — users have to read and compare manually
-- Mobile experience is an afterthought on both platforms
-- CampusLens differentiates on speed (SSR), clean UX, best-value highlighting, and URL-driven state
 
 ---
 
 ## Contributing
 
-This is an evaluation project and not open for public contributions.
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: add your feature'`
+4. Push and open a pull request
+
+Please run `npm run build` before opening a PR to catch TypeScript errors.
 
 ---
 
@@ -587,8 +617,4 @@ MIT — see [LICENSE](./LICENSE) for details.
 
 ---
 
-<div align="center">
-  Built with ☕ and too many browser tabs open
-  <br/>
-  <strong>CampusLens</strong> — making college decisions slightly less overwhelming
-</div>
+*Built by [Kirtan Kumar Sanghi](https://github.com/kirtankumarsanghi)*
