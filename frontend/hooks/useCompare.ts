@@ -22,13 +22,13 @@ export const useCompare = create<CompareState>()(
       setCompare: (colleges) => {
         const unique = colleges
           .filter((c, index, arr) => arr.findIndex((x) => x.id === c.id) === index)
-          .slice(0, 3);
+          .slice(0, 5);
         set({ compareIds: unique.map((c) => c.id), compareColleges: unique });
       },
       addToCompare: (college) => {
         const { compareIds, compareColleges } = get();
         if (compareIds.includes(college.id)) return { ok: true };
-        if (compareIds.length >= 3) return { ok: false, message: "Max 3 colleges" };
+        if (compareIds.length >= 5) return { ok: false, message: "Max 5 colleges" };
         set({ compareIds: [...compareIds, college.id], compareColleges: [...compareColleges, college] });
         return { ok: true };
       },

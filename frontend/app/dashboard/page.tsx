@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getFallbackColleges } from "@/lib/fallback-loader";
 import { CollegeCard } from "@/components/college/CollegeCard";
 import { KanbanBoard } from "@/components/dashboard/KanbanBoard";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default async function DashboardPage() {
   const allColleges = await getFallbackColleges();
@@ -21,6 +22,7 @@ export default async function DashboardPage() {
       <div className="glass-card rounded-none border-b-0 border-white/5 bg-bg-base/60 backdrop-blur-2xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-center gap-5">
+            <BackButton fallback="/" />
             <div className="h-16 w-16 overflow-hidden rounded-full bg-gradient-to-tr from-primary to-emerald-500 p-[2px]">
               <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0F0F13] text-xl font-bold text-white">
                 KS

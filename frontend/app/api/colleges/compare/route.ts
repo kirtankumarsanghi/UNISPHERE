@@ -5,7 +5,7 @@ import { getFallbackColleges } from "@/lib/fallback-loader";
 export async function GET(req: NextRequest) {
   const idsParam = req.nextUrl.searchParams.get("ids");
   if (!idsParam) return NextResponse.json({ error: "ids required" }, { status: 400 });
-  const ids = idsParam.split(",").filter(Boolean).slice(0, 3);
+  const ids = idsParam.split(",").filter(Boolean).slice(0, 5);
 
   try {
     const colleges = await prisma.college.findMany({

@@ -10,6 +10,7 @@ type Props = {
   college: {
     id: string; name: string; abbreviation: string; annualFees: number;
     established: number; type: string; website?: string | null;
+    nirf?: number | null; totalReviews?: number; city?: string; state?: string;
     placements: { avgPackage: number } | null;
   };
 };
@@ -48,6 +49,10 @@ export function DetailSidebar({ college }: Props) {
     ["Avg Package", formatPackage(college.placements?.avgPackage ?? 0)],
     ["Established", String(college.established)],
     ["Type", college.type],
+    ...(college.nirf ? [["NIRF Rank", `#${college.nirf}`]] : []),
+    ...(typeof college.totalReviews === "number" ? [["Reviews", String(college.totalReviews)]] : []),
+    ...(college.city ? [["City", college.city]] : []),
+    ...(college.state ? [["State", college.state]] : []),
   ];
 
   return (

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getFallbackColleges } from "@/lib/fallback-loader";
 import { CollegeCard } from "@/components/college/CollegeCard";
@@ -10,7 +11,7 @@ import { MobileFilterSheet } from "@/components/layout/MobileFilterSheet";
 import { HeroWidgets } from "@/components/college/HeroWidgets";
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Brain, MessageCircle, Scale, Star, TrendingUp, Zap, GraduationCap, Building2, Award } from "lucide-react";
+import { ArrowRight, BarChart3, Brain, MessageCircle, Scale, Star, TrendingUp, Zap, GraduationCap, Building2, Award, BookOpen } from "lucide-react";
 
 const byContains = (v: string, q: string) => v.toLowerCase().includes(q.toLowerCase());
 
@@ -19,6 +20,155 @@ type SearchParamsInput =
   | Promise<Record<string, string | string[] | undefined>>;
 
 const asSingle = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+type CollegeCardData = {
+  id: string;
+  name: string;
+  slug: string;
+  abbreviation: string;
+  city: string;
+  state: string;
+  type: string;
+  gradientFrom: string;
+  gradientTo: string;
+  annualFees: number;
+  rating: number;
+  established: number;
+  nirf: number | null;
+  totalReviews: number;
+  placements: { avgPackage: number; placementPercent: number } | null;
+  courses: { name: string; degree: string }[];
+};
+
+type CollegesPageInput = {
+  page: number;
+  limit: number;
+  q: string;
+  type?: string;
+  state?: string;
+  city?: string;
+  course?: string;
+  degree?: string;
+  minFees: number;
+  maxFees: number;
+  minRating: number;
+  minPlacement: number;
+  minYear: number;
+  maxNirf: number;
+  sortBy: string;
+  order: Prisma.SortOrder;
+};
+
+const collegeCardSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  abbreviation: true,
+  city: true,
+  state: true,
+  type: true,
+  gradientFrom: true,
+  gradientTo: true,
+  annualFees: true,
+  rating: true,
+  established: true,
+  nirf: true,
+  placements: { select: { avgPackage: true, placementPercent: true } },
+  courses: { select: { name: true, degree: true }, take: 3, orderBy: { name: "asc" as const } },
+  _count: { select: { reviews: true } },
+};
+
+const getCollegesPage = unstable_cache(
+  async (input: CollegesPageInput) => {
+    const and: Prisma.CollegeWhereInput[] = [];
+    if (input.q) and.push({ OR: [{ name: { contains: input.q, mode: "insensitive" } }, { location: { contains: input.q, mode: "insensitive" } }, { courses: { some: { name: { contains: input.q, mode: "insensitive" } } } }] });
+    if (input.type) and.push({ type: input.type as never });
+    if (input.state) and.push({ state: input.state });
+    if (input.city) and.push({ city: { contains: input.city, mode: "insensitive" } });
+    if (input.course) and.push({ courses: { some: { name: { contains: input.course, mode: "insensitive" } } } });
+    if (input.degree) and.push({ courses: { some: { degree: { contains: input.degree, mode: "insensitive" } } } });
+    and.push({ annualFees: { gte: Number.isNaN(input.minFees) ? 0 : input.minFees, lte: Number.isNaN(input.maxFees) ? 10000000 : input.maxFees } });
+    if (!Number.isNaN(input.minRating) && input.minRating > 0) and.push({ rating: { gte: input.minRating } });
+    if (!Number.isNaN(input.minPlacement) && input.minPlacement > 0) and.push({ placements: { is: { avgPackage: { gte: input.minPlacement } } } });
+    if (!Number.isNaN(input.minYear) && input.minYear > 1900) and.push({ established: { gte: input.minYear } });
+    if (!Number.isNaN(input.maxNirf) && input.maxNirf < 9999) and.push({ nirf: { lte: input.maxNirf } });
+
+    const where: Prisma.CollegeWhereInput = and.length ? { AND: and } : {};
+    const orderBy: Prisma.CollegeOrderByWithRelationInput =
+      input.sortBy === "fees" ? { annualFees: input.order }
+      : input.sortBy === "name" ? { name: input.order }
+      : input.sortBy === "placement" ? { placements: { avgPackage: input.order } }
+      : input.sortBy === "popular" ? { totalReviews: "desc" }
+      : { rating: input.order };
+
+    const [colleges, total] = await Promise.all([
+      prisma.college.findMany({ where, select: collegeCardSelect, take: input.limit, skip: (input.page - 1) * input.limit, orderBy }),
+      prisma.college.count({ where }),
+    ]);
+
+    const normalized = colleges.map((college) => ({ ...college, totalReviews: college._count.reviews })) as CollegeCardData[];
+    return { colleges: normalized, total };
+  },
+  ["colleges-page"],
+  { revalidate: 300 }
+);
+
+const getTopRatedColleges = unstable_cache(
+  async () => {
+    const colleges = await prisma.college.findMany({
+      select: collegeCardSelect,
+      orderBy: { rating: "desc" },
+      take: 8,
+    });
+    return colleges.map((college) => ({ ...college, totalReviews: college._count.reviews })) as CollegeCardData[];
+  },
+  ["top-rated-colleges"],
+  { revalidate: 3600 }
+);
+
+const getTopCourses = unstable_cache(
+  async () => {
+    const courses = await prisma.course.groupBy({
+      by: ["name", "degree"],
+      _count: { _all: true },
+      orderBy: { _count: { _all: "desc" } },
+      take: 8,
+    });
+    return courses.map((course) => ({ name: course.name, degree: course.degree, count: course._count._all }));
+  },
+  ["top-courses"],
+  { revalidate: 3600 }
+);
+
+const categoryTypes = ["IIT", "NIT", "IIIT", "PRIVATE"] as const;
+
+const getCategoryColleges = unstable_cache(
+  async () => {
+    const colleges = await prisma.college.findMany({
+      select: collegeCardSelect,
+      orderBy: { rating: "desc" },
+      take: 80,
+    });
+    const normalized = colleges.map((college) => ({ ...college, totalReviews: college._count.reviews })) as CollegeCardData[];
+    return Object.fromEntries(categoryTypes.map((t) => [t, normalized.filter((c) => c.type === t).slice(0, 4)]));
+  },
+  ["category-colleges"],
+  { revalidate: 3600 }
+);
+
+const getGlobalStats = unstable_cache(
+  async () => {
+    const [colleges, courses, reviews, placements] = await Promise.all([
+      prisma.college.count(),
+      prisma.course.count(),
+      prisma.review.count(),
+      prisma.placement.count(),
+    ]);
+    return { colleges, courses, reviews, placements };
+  },
+  ['global-stats'],
+  { revalidate: 3600 }
+);
 
 export default async function Home({ searchParams }: { searchParams?: SearchParamsInput }) {
   const resolved = (await Promise.resolve(searchParams ?? {})) as Record<string, string | string[] | undefined>;
@@ -40,30 +190,11 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
   const [sortBy, orderRaw] = sort.split("_");
   const order: Prisma.SortOrder = orderRaw === "asc" ? "asc" : "desc";
 
-  const and: Prisma.CollegeWhereInput[] = [];
-  if (q) and.push({ OR: [{ name: { contains: q, mode: "insensitive" } }, { location: { contains: q, mode: "insensitive" } }, { courses: { some: { name: { contains: q, mode: "insensitive" } } } }] });
-  if (type) and.push({ type: type as never });
-  if (state) and.push({ state });
-  if (city) and.push({ city: { contains: city, mode: "insensitive" } });
-  if (course) and.push({ courses: { some: { name: { contains: course, mode: "insensitive" } } } });
-  if (degree) and.push({ courses: { some: { degree: { contains: degree, mode: "insensitive" } } } });
-  and.push({ annualFees: { gte: Number.isNaN(minFees) ? 0 : minFees, lte: Number.isNaN(maxFees) ? 10000000 : maxFees } });
-  if (!Number.isNaN(minRating) && minRating > 0) and.push({ rating: { gte: minRating } });
-  if (!Number.isNaN(minPlacement) && minPlacement > 0) and.push({ placements: { is: { avgPackage: { gte: minPlacement } } } });
-  if (!Number.isNaN(minYear) && minYear > 1900) and.push({ established: { gte: minYear } });
-  if (!Number.isNaN(maxNirf) && maxNirf < 9999) and.push({ nirf: { lte: maxNirf } });
-
-  const where: Prisma.CollegeWhereInput = and.length ? { AND: and } : {};
-  const orderBy: Prisma.CollegeOrderByWithRelationInput =
-    sortBy === "fees" ? { annualFees: order }
-    : sortBy === "name" ? { name: order }
-    : sortBy === "placement" ? { placements: { avgPackage: order } }
-    : sortBy === "popular" ? { totalReviews: "desc" }
-    : { rating: order };
-
-  let colleges: any[] = [];
+  let colleges: CollegeCardData[] = [];
   let total = 0;
-  let allColleges: any[] = [];
+  let topRated: CollegeCardData[] = [];
+  let topCourses: { name: string; degree: string; count: number }[] = [];
+  let categoryColleges: Record<string, CollegeCardData[]> = {};
   let stats = [
     { value: "0", label: "Colleges", icon: Building2 },
     { value: "0", label: "Courses", icon: GraduationCap },
@@ -73,26 +204,44 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
   let fallback = false;
 
   try {
-    const [c, t, totalColleges, totalCourses, totalReviews, placementCount] = await Promise.all([
-      prisma.college.findMany({ where, include: { placements: true, _count: { select: { reviews: true } } }, take: limit, skip: (page - 1) * limit, orderBy }),
-      prisma.college.count({ where }),
-      prisma.college.count(),
-      prisma.course.count(),
-      prisma.review.count(),
-      prisma.placement.count(),
+    const [pageData, globalStats, topRatedRes, topCoursesRes, categoryRes] = await Promise.all([
+      getCollegesPage({
+        page,
+        limit,
+        q,
+        type,
+        state,
+        city,
+        course,
+        degree,
+        minFees,
+        maxFees,
+        minRating,
+        minPlacement,
+        minYear,
+        maxNirf,
+        sortBy,
+        order,
+      }),
+      getGlobalStats(),
+      getTopRatedColleges(),
+      getTopCourses(),
+      getCategoryColleges(),
     ]);
-    colleges = c.map((college) => ({ ...college, totalReviews: college._count.reviews }));
-    total = t;
+    colleges = pageData.colleges;
+    total = pageData.total;
+    topRated = topRatedRes;
+    topCourses = topCoursesRes;
+    categoryColleges = categoryRes;
     stats = [
-      { value: totalColleges.toLocaleString(), label: "Colleges", icon: Building2 },
-      { value: totalCourses.toLocaleString(), label: "Courses", icon: GraduationCap },
-      { value: totalReviews.toLocaleString(), label: "Reviews", icon: Star },
-      { value: `${Math.round((placementCount / Math.max(totalColleges, 1)) * 100)}%`, label: "Placement Data", icon: TrendingUp },
+      { value: globalStats.colleges.toLocaleString(), label: "Colleges", icon: Building2 },
+      { value: globalStats.courses.toLocaleString(), label: "Courses", icon: GraduationCap },
+      { value: globalStats.reviews.toLocaleString(), label: "Reviews", icon: Star },
+      { value: `${Math.round((globalStats.placements / Math.max(globalStats.colleges, 1)) * 100)}%`, label: "Placement Data", icon: TrendingUp },
     ];
   } catch {
     fallback = true;
     const fallbackColleges = await getFallbackColleges();
-    allColleges = fallbackColleges;
     let data = fallbackColleges.filter((c) => {
       if (q && !(byContains(c.name, q) || byContains(c.location, q) || byContains(c.city, q) || byContains(c.state, q) || c.courses.some((x) => byContains(x.name, q)))) return false;
       if (type && c.type !== type) return false;
@@ -118,7 +267,19 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
 
     total = data.length;
     const start = (page - 1) * limit;
-    colleges = data.slice(start, start + limit);
+    colleges = data.slice(start, start + limit) as CollegeCardData[];
+    topRated = [...fallbackColleges].sort((a, b) => b.rating - a.rating).slice(0, 8) as CollegeCardData[];
+    categoryColleges = Object.fromEntries(categoryTypes.map((t) => [t, fallbackColleges.filter((c) => c.type === t).sort((a, b) => b.rating - a.rating).slice(0, 4)]));
+    const courseCounts = new Map<string, { name: string; degree: string; count: number }>();
+    fallbackColleges.forEach((college) => {
+      college.courses.forEach((course) => {
+        const key = `${course.degree}::${course.name}`;
+        const current = courseCounts.get(key);
+        if (current) current.count += 1;
+        else courseCounts.set(key, { name: course.name, degree: course.degree, count: 1 });
+      });
+    });
+    topCourses = Array.from(courseCounts.values()).sort((a, b) => b.count - a.count).slice(0, 8);
     stats = [
       { value: String(fallbackColleges.length), label: "Colleges", icon: Building2 },
       { value: String(fallbackColleges.reduce((acc, c) => acc + c.courses.length, 0)), label: "Courses", icon: GraduationCap },
@@ -128,17 +289,6 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
   }
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
-
-  // Trending colleges (top 8 by rating)
-  const trending = fallback
-    ? allColleges.sort((a, b) => (b.nirf ? 1 / b.nirf : 0) - (a.nirf ? 1 / a.nirf : 0)).slice(0, 8)
-    : colleges.slice(0, 8);
-
-  // Category data
-  const categoryTypes = ["IIT", "NIT", "IIIT", "PRIVATE"] as const;
-  const categoryColleges = fallback
-    ? Object.fromEntries(categoryTypes.map((t) => [t, allColleges.filter((c) => c.type === t).sort((a, b) => b.rating - a.rating).slice(0, 4)]))
-    : {};
 
   const features = [
     { icon: BarChart3, title: "Real Placement Data", desc: "Verified salary data from 500+ colleges with avg, median, and highest packages.", href: "/", color: "from-emerald-500/20 to-emerald-500/5" },
@@ -229,6 +379,63 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
               </div>
           </div>
       </section>
+
+      {/* ===== TOP RATED COLLEGES ===== */}
+      {topRated.length > 0 && (
+        <section className="border-t border-white/[0.04] py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="mb-4 inline-flex items-center rounded-full border border-glass-border bg-surface-container-highest px-3 py-1 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                  Top Rated
+                </div>
+                <h2 className="font-headline-lg text-[40px] leading-tight md:text-[54px] text-on-surface tracking-[-0.02em]">
+                  Highest rated colleges
+                </h2>
+                <p className="mt-2 font-body-md text-body-md text-on-surface-variant">Curated by ratings and verified placement metrics.</p>
+              </div>
+              <Link href="/?sort=rating_desc" className="group inline-flex items-center gap-2 font-label-caps text-label-caps text-primary hover:text-primary-fixed transition-colors">
+                Explore all<span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {topRated.map((college) => (
+                <CollegeCard key={college.id} college={college} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===== POPULAR COURSES ===== */}
+      {topCourses.length > 0 && (
+        <section className="border-t border-white/[0.04] py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-10">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-glass-border bg-surface-container-highest px-3 py-1 font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                <BookOpen size={12} /> Popular Courses
+              </div>
+              <h2 className="font-headline-lg text-[38px] leading-tight md:text-[52px] text-on-surface tracking-[-0.02em]">Explore by program</h2>
+              <p className="mt-2 font-body-md text-body-md text-on-surface-variant">Jump straight into the most offered courses across colleges.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {topCourses.map((course) => {
+                const href = `/?course=${encodeURIComponent(course.name)}&degree=${encodeURIComponent(course.degree)}`;
+                return (
+                  <Link key={`${course.degree}-${course.name}`} href={href} className="group rounded-[24px] glass-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-glow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary/80">{course.degree}</div>
+                    <h3 className="mt-3 font-display text-lg font-bold text-on-surface group-hover:text-primary transition-colors">{course.name}</h3>
+                    <p className="mt-3 text-[12px] text-on-surface-variant">{course.count} colleges</p>
+                    <div className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
+                      View colleges <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Intelligence Section */}
       <section className="w-full px-6 py-32 relative border-t border-glass-border">
@@ -382,7 +589,7 @@ export default async function Home({ searchParams }: { searchParams?: SearchPara
       </section>
 
       {/* ===== TOP COLLEGES BY CATEGORY ===== */}
-      {fallback && Object.keys(categoryColleges).length > 0 && (
+      {Object.keys(categoryColleges).length > 0 && (
         <section className="border-t border-white/[0.04] py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-12 text-center">

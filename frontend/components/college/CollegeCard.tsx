@@ -21,7 +21,11 @@ type CollegeCardProps = {
     gradientTo: string;
     annualFees: number;
     rating: number;
+    established?: number;
+    nirf?: number | null;
+    totalReviews?: number;
     placements?: { avgPackage: number; placementPercent: number } | null;
+    courses?: { name: string; degree: string }[];
   };
 };
 
@@ -31,7 +35,7 @@ export function CollegeCard({ college }: CollegeCardProps) {
   const { push } = useToast();
   const added = isInCompare(college.id);
   const saved = isSaved(college.id);
-  const disabled = compareIds.length >= 3 && !added;
+  const disabled = compareIds.length >= 5 && !added;
   const imageUrl = getCollegeImage(college.slug);
 
   const onCompare = () => {
@@ -109,6 +113,12 @@ export function CollegeCard({ college }: CollegeCardProps) {
           <span>{college.city}, {college.state}</span>
         </div>
 
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-on-surface-variant">
+          {college.established ? <span className="rounded-full bg-white/[0.03] px-2.5 py-1 ring-1 ring-white/10">Est. {college.established}</span> : null}
+          {college.nirf ? <span className="rounded-full bg-white/[0.03] px-2.5 py-1 ring-1 ring-white/10">NIRF #{college.nirf}</span> : null}
+          {typeof college.totalReviews === "number" ? <span className="rounded-full bg-white/[0.03] px-2.5 py-1 ring-1 ring-white/10">{college.totalReviews} reviews</span> : null}
+        </div>
+
         {/* Stats grid */}
         <div className="mt-6 grid grid-cols-3 gap-2">
           {[
@@ -122,6 +132,16 @@ export function CollegeCard({ college }: CollegeCardProps) {
             </div>
           ))}
         </div>
+
+        {college.courses?.length ? (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {college.courses.slice(0, 3).map((course) => (
+              <span key={`${course.degree}-${course.name}`} className="rounded-full bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-widest text-on-surface-variant ring-1 ring-white/10">
+                {course.degree} {course.name}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         {/* Footer actions */}
         <footer className="mt-auto flex items-center justify-between pt-6">

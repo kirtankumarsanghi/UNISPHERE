@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getFallbackColleges } from "@/lib/fallback-loader";
 import type { FallbackCollege } from "@/lib/fallback-colleges";
@@ -13,16 +14,43 @@ import { DetailSidebar } from "@/components/detail/DetailSidebar";
 import { SimilarColleges } from "@/components/detail/SimilarColleges";
 import { ROICalculator } from "@/components/detail/ROICalculator";
 import { AICampusGuide } from "@/components/detail/AICampusGuide";
+import { BackButton } from "@/components/ui/BackButton";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 type PageProps = { params: { slug: string } };
 
+const getCollege = unstable_cache(
+  async (idOrSlug: string) =>
+    prisma.college.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+      include: {
+        courses: true,
+        placements: true,
+        reviews: { orderBy: { createdAt: "desc" }, take: 10 },
+      },
+    }),
+  ["college-detail"],
+  { revalidate: 300 }
+);
+
+const getSimilarColleges = unstable_cache(
+  async (type: string, excludeId: string) =>
+    prisma.college.findMany({
+      where: { type: type as never, id: { not: excludeId } },
+      include: { placements: true },
+      take: 4,
+      orderBy: { rating: "desc" },
+    }),
+  ["college-similar"],
+  { revalidate: 300 }
+);
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const fallbackColleges = await getFallbackColleges();
 
   try {
-    const college = await prisma.college.findFirst({ where: { OR: [{ id: params.slug }, { slug: params.slug }] } });
+    const college = await getCollege(params.slug);
     if (college) {
       return {
         title: `${college.name} - Unisphere`,
@@ -43,20 +71,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CollegeDetail({ params }: PageProps) {
-  let college: Awaited<ReturnType<typeof fetchCollege>> | ReturnType<typeof mapFallbackCollege> | null = null;
+  let college: Awaited<ReturnType<typeof getCollege>> | ReturnType<typeof mapFallbackCollege> | null = null;
   let similarColleges: any[] = [];
   const fallbackColleges = await getFallbackColleges();
   const fallback = fallbackColleges.find((item) => item.slug === params.slug || item.id === params.slug);
 
   try {
-    college = await fetchCollege(params.slug);
+    college = await getCollege(params.slug);
     if (college) {
-      similarColleges = await prisma.college.findMany({
-        where: { type: college.type, id: { not: college.id } },
-        include: { placements: true },
-        take: 4,
-        orderBy: { rating: "desc" },
-      });
+      similarColleges = await getSimilarColleges(college.type, college.id);
     }
   } catch {
     // fallback handled below
@@ -77,17 +100,22 @@ export default async function CollegeDetail({ params }: PageProps) {
     { label: "Avg Package", value: formatPackage(college.placements?.avgPackage ?? 0) },
     { label: "Highest Package", value: formatPackage(college.placements?.highestPackage ?? 0) },
     { label: "Placement %", value: `${college.placements?.placementPercent ?? 0}%` },
+    { label: "Established", value: String(college.established) },
+    ...(college.nirf ? [{ label: "NIRF Rank", value: `#${college.nirf}` }] : []),
   ];
 
   return (
     <div className="pb-24">
-      <nav className="mb-4 flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
-        <Link href="/" className="transition-colors hover:text-on-surface">Home</Link>
-        <span className="text-white/10">/</span>
-        <Link href="/" className="transition-colors hover:text-on-surface">Colleges</Link>
-        <span className="text-white/10">/</span>
-        <span className="text-on-surface">{college.name}</span>
-      </nav>
+      <div className="mb-4 flex items-center gap-4">
+        <BackButton fallback="/" />
+        <nav className="flex items-center gap-2 font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+          <Link href="/" className="transition-colors hover:text-on-surface">Home</Link>
+          <span className="text-white/10">/</span>
+          <Link href="/" className="transition-colors hover:text-on-surface">Colleges</Link>
+          <span className="text-white/10">/</span>
+          <span className="text-on-surface line-clamp-1">{college.name}</span>
+        </nav>
+      </div>
 
       <CollegeHero college={college} />
 
@@ -100,21 +128,21 @@ export default async function CollegeDetail({ params }: PageProps) {
         ))}
       </section>
 
-      <SubNav reviewCount={college.reviews.length} />
+      <SubNav reviewCount={college.totalReviews ?? college.reviews.length} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="space-y-6">
-          <section id="overview"><OverviewTab overview={college.overview} established={college.established} website={college.website} /></section>
-          <section id="roi" className="scroll-mt-24">
+          <section id="overview" className="scroll-mt-32"><OverviewTab overview={college.overview} established={college.established} website={college.website} /></section>
+          <section id="roi" className="scroll-mt-32">
             <ROICalculator 
               collegeName={college.name} 
               defaultFee={college.annualFees * 4} 
               defaultSalary={college.placements?.avgPackage ?? 800000} 
             />
           </section>
-          <section id="courses"><CoursesTab courses={college.courses} /></section>
-          <section id="placements"><PlacementsTab placement={college.placements} /></section>
-          <section id="reviews"><ReviewsTab reviews={college.reviews} /></section>
+          <section id="courses" className="scroll-mt-32"><CoursesTab courses={college.courses} /></section>
+          <section id="placements" className="scroll-mt-32"><PlacementsTab placement={college.placements} /></section>
+          <section id="reviews" className="scroll-mt-32"><ReviewsTab reviews={college.reviews} /></section>
         </div>
         <DetailSidebar college={college} />
       </div>
@@ -130,13 +158,6 @@ export default async function CollegeDetail({ params }: PageProps) {
       <AICampusGuide collegeName={college.name} />
     </div>
   );
-}
-
-async function fetchCollege(idOrSlug: string) {
-  return prisma.college.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
-    include: { courses: true, placements: true, reviews: { orderBy: { createdAt: "desc" }, take: 10 } },
-  });
 }
 
 function mapFallbackCollege(college: FallbackCollege) {

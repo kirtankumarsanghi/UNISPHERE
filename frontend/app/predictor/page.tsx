@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight, Calculator, ChevronDown, TrendingUp, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { BackButton } from "@/components/ui/BackButton";
 import { formatFees, formatPackage } from "@/lib/utils";
 import { getCollegeImage } from "@/lib/college-images";
 
@@ -76,16 +77,21 @@ export default function PredictorPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-12 text-center">
-        <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full glass-panel px-4 py-1.5 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant/70">
-          <Sparkles size={12} /> AI-Powered Predictions
+      <div className="mb-12 flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="pt-2">
+          <BackButton fallback="/" />
         </div>
-        <h1 className="font-display-xl text-[48px] sm:text-[64px] text-on-surface">
-          College Predictor
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-          Enter your exam, rank, and category to find colleges where you have a strong chance of admission based on historical cutoff data.
-        </p>
+        <div className="text-left sm:text-center sm:mx-auto">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full glass-panel px-4 py-1.5 font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant/70">
+            <Sparkles size={12} /> AI-Powered Predictions
+          </div>
+          <h1 className="font-display-xl text-[48px] sm:text-[64px] text-on-surface">
+            College Predictor
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
+            Enter your exam, rank, and category to find colleges where you have a strong chance of admission based on historical cutoff data.
+          </p>
+        </div>
       </div>
 
       {/* Prediction Form */}

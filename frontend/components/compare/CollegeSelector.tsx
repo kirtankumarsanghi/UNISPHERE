@@ -20,17 +20,17 @@ export function CollegeSelector() {
       .catch(() => setResults([]));
   }, [open, q]);
 
-  const slots = useMemo(() => [0, 1, 2], []);
+  const slots = useMemo(() => [0, 1, 2, 3, 4], []);
 
   return (
     <>
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-8 flex overflow-x-auto snap-x gap-4 pb-4 scrollbar-hide">
         {slots.map((idx) => {
           const c = compareColleges[idx];
           if (c) {
-            return <div key={idx} className="rounded-[2rem] glass-card p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-[0_4px_30px_rgba(78,222,163,0.15)]"><div className="flex items-start justify-between"><div><p className="font-headline-lg text-[24px] font-bold text-on-surface">{c.abbreviation}</p><p className="mt-2 font-body-md text-on-surface-variant">{c.name}</p></div><button onClick={() => removeFromCompare(c.id)} className="text-on-surface-variant hover:text-primary transition-colors"><X size={18} /></button></div></div>;
+            return <div key={idx} className="shrink-0 snap-start w-[260px] sm:w-[300px] rounded-[2rem] glass-card p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-[0_4px_30px_rgba(78,222,163,0.15)]"><div className="flex items-start justify-between"><div><p className="font-headline-lg text-[24px] font-bold text-on-surface line-clamp-1">{c.abbreviation}</p><p className="mt-2 font-body-md text-on-surface-variant line-clamp-2">{c.name}</p></div><button onClick={() => removeFromCompare(c.id)} className="text-on-surface-variant hover:text-primary transition-colors ml-2"><X size={18} /></button></div></div>;
           }
-          return <button key={idx} onClick={() => setOpen(true)} className="grid h-48 place-items-center rounded-[2rem] glass-card transition-all hover:border-primary/50 hover:bg-white/[0.04] text-on-surface-variant hover:text-primary"><span className="flex flex-col items-center gap-3 font-label-caps text-[12px] uppercase tracking-widest"><div className="rounded-full border border-current p-1.5"><PlusCircle size={16} /></div> Add College</span></button>;
+          return <button key={idx} onClick={() => setOpen(true)} className="shrink-0 snap-start w-[260px] sm:w-[300px] grid h-48 place-items-center rounded-[2rem] glass-card transition-all hover:border-primary/50 hover:bg-white/[0.04] text-on-surface-variant hover:text-primary"><span className="flex flex-col items-center gap-3 font-label-caps text-[12px] uppercase tracking-widest"><div className="rounded-full border border-current p-1.5"><PlusCircle size={16} /></div> Add College</span></button>;
         })}
       </div>
 

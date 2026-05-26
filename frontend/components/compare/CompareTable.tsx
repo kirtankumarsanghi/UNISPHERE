@@ -12,8 +12,10 @@ type College = {
   annualFees: number;
   rating: number;
   totalReviews: number;
-  placements: { avgPackage: number; highestPackage: number; medianPackage: number; placementPercent: number } | null;
-  courses: { degree: string; name?: string }[];
+  placements: { avgPackage: number; highestPackage: number; medianPackage: number; placementPercent: number; topRecruiters?: string[] } | null;
+  courses: { degree: string; name?: string; totalSeats?: number }[];
+  website?: string | null;
+  overview?: string;
 };
 
 type MetricGroup = {
@@ -26,19 +28,22 @@ export function CompareTable({ colleges }: { colleges: College[] }) {
     {
       title: "General",
       metrics: [
+        { label: "Overview", getter: (c) => c.overview ? c.overview.substring(0, 80) + "..." : "A reputed institution." },
         { label: "Location", getter: (c) => `${c.city}, ${c.state}` },
         { label: "Type", getter: (c) => c.type },
         { label: "Established", getter: (c) => String(c.established) },
         { label: "NIRF Rank", getter: (c) => (c.nirf ? `#${c.nirf}` : "N/A"), numGetter: (c) => c.nirf ?? 999, best: "lowest" },
         { label: "Rating", getter: (c) => c.rating.toFixed(1), numGetter: (c) => c.rating, best: "highest" },
         { label: "Reviews", getter: (c) => String(c.totalReviews) },
+        { label: "Website", getter: (c) => c.website ? new URL(c.website).hostname.replace('www.', '') : "N/A" },
       ],
     },
     {
-      title: "Fees",
+      title: "Fees & ROI",
       metrics: [
         { label: "Annual Fees", getter: (c) => formatFees(c.annualFees), numGetter: (c) => c.annualFees, best: "lowest" },
         { label: "Total 4-Year Cost", getter: (c) => formatFees(c.annualFees * 4), numGetter: (c) => c.annualFees * 4, best: "lowest" },
+        { label: "ROI (Avg Pkg / Fees)", getter: (c) => c.annualFees && c.placements?.avgPackage ? `${(c.placements.avgPackage / c.annualFees).toFixed(1)}x` : "N/A", numGetter: (c) => c.annualFees && c.placements?.avgPackage ? (c.placements.avgPackage / c.annualFees) : 0, best: "highest" },
       ],
     },
     {
@@ -48,13 +53,15 @@ export function CompareTable({ colleges }: { colleges: College[] }) {
         { label: "Highest Package", getter: (c) => formatPackage(c.placements?.highestPackage ?? 0), numGetter: (c) => c.placements?.highestPackage ?? 0, best: "highest" },
         { label: "Median Package", getter: (c) => formatPackage(c.placements?.medianPackage ?? 0), numGetter: (c) => c.placements?.medianPackage ?? 0, best: "highest" },
         { label: "Placement %", getter: (c) => `${c.placements?.placementPercent ?? 0}%`, numGetter: (c) => c.placements?.placementPercent ?? 0, best: "highest" },
+        { label: "Top Recruiters", getter: (c) => c.placements?.topRecruiters?.slice(0, 3).join(", ") || "N/A" },
       ],
     },
     {
       title: "Academics",
       metrics: [
-        { label: "Degrees Offered", getter: (c) => Array.from(new Set(c.courses.map((x) => x.degree))).join(", ") },
+        { label: "Degrees Offered", getter: (c) => Array.from(new Set(c.courses.map((x) => x.degree))).join(", ") || "N/A" },
         { label: "No. of Courses", getter: (c) => String(c.courses.length), numGetter: (c) => c.courses.length, best: "highest" },
+        { label: "Total Intake (Seats)", getter: (c) => String(c.courses.reduce((acc, crs) => acc + (crs.totalSeats || 0), 0)), numGetter: (c) => c.courses.reduce((acc, crs) => acc + (crs.totalSeats || 0), 0), best: "highest" },
       ],
     },
   ];
@@ -79,8 +86,8 @@ export function CompareTable({ colleges }: { colleges: College[] }) {
               const maxVal = values.length ? Math.max(...values.filter(v => v > 0)) : 0;
 
               return (
-                <div key={metric.label} className="grid items-center gap-0" style={{ gridTemplateColumns: `180px repeat(${colleges.length}, 1fr)` }}>
-                  <div className="px-5 py-4 text-[13px] font-medium text-text-secondary">{metric.label}</div>
+                <div key={metric.label} className="grid items-center gap-0" style={{ gridTemplateColumns: `180px repeat(${colleges.length}, minmax(180px, 1fr))` }}>
+                  <div className="px-5 py-4 text-[16px] font-semibold text-text-secondary">{metric.label}</div>
                   {colleges.map((c, idx) => {
                     const val = metric.getter(c);
                     const numVal = metric.numGetter ? metric.numGetter(c) : null;
@@ -90,7 +97,7 @@ export function CompareTable({ colleges }: { colleges: College[] }) {
                     return (
                       <div key={`${c.id}-${metric.label}`} className={`relative px-5 py-4 ${idx > 0 ? "border-l border-white/[0.03]" : ""}`}>
                         <div className="flex items-center gap-2">
-                          <span className={`font-mono text-[14px] font-semibold ${isBest ? "text-emerald-400" : "text-text-primary"}`}>
+                          <span className={`font-mono text-[18px] font-bold ${isBest ? "text-emerald-400" : "text-text-primary"}`}>
                             {val}
                           </span>
                           {isBest && (

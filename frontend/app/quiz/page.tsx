@@ -2,14 +2,15 @@
 import { useState } from "react";
 import { ArrowRight, BrainCircuit, CheckCircle2, ChevronLeft, RefreshCw, Trophy, Target, Banknote, MapPin } from "lucide-react";
 import Link from "next/link";
-import { getFallbackColleges } from "@/lib/fallback-loader";
+import { fallbackColleges } from "@/lib/fallback-colleges";
 import { CollegeCard } from "@/components/college/CollegeCard";
 
 type QuizState = {
   step: number;
   type: string | null;
   budget: string | null;
-  region: string | null;
+  state: string | null;
+  degree: string | null;
   difficulty: string | null;
 };
 
@@ -18,7 +19,8 @@ export default function QuizPage() {
     step: 0,
     type: null,
     budget: null,
-    region: null,
+    state: null,
+    degree: null,
     difficulty: null,
   });
 
@@ -47,13 +49,44 @@ export default function QuizPage() {
       ]
     },
     {
-      title: "Any location preference?",
-      field: "region",
+      title: "Pick your preferred degree program",
+      field: "degree",
       options: [
-        { id: "NORTH", label: "North India", desc: "Delhi, UP, Punjab, etc.", icon: MapPin },
-        { id: "SOUTH", label: "South India", desc: "TN, Karnataka, Kerala, etc.", icon: MapPin },
-        { id: "WEST", label: "West/Central", desc: "Maharashtra, Gujarat, MP", icon: MapPin },
-        { id: "ANY", label: "Anywhere", desc: "Willing to relocate anywhere", icon: MapPin },
+        { id: "B.Tech", label: "B.Tech", desc: "Engineering undergraduate", icon: GraduationCap },
+        { id: "B.E.", label: "B.E.", desc: "Engineering undergraduate", icon: GraduationCap },
+        { id: "MBA", label: "MBA", desc: "Management postgraduate", icon: GraduationCap },
+        { id: "B.Sc", label: "B.Sc", desc: "Science undergraduate", icon: GraduationCap },
+        { id: "BCA", label: "BCA", desc: "Computer applications", icon: GraduationCap },
+        { id: "ANY", label: "No Preference", desc: "Show all programs", icon: CheckCircle2 },
+      ]
+    },
+    {
+      title: "Which state do you prefer?",
+      field: "state",
+      options: [
+        { id: "ANY", label: "Anywhere", desc: "No state preference", icon: MapPin },
+        { id: "Delhi", label: "Delhi", desc: "National Capital Region", icon: MapPin },
+        { id: "Uttar Pradesh", label: "Uttar Pradesh", desc: "North India", icon: MapPin },
+        { id: "Maharashtra", label: "Maharashtra", desc: "West India", icon: MapPin },
+        { id: "Karnataka", label: "Karnataka", desc: "South India", icon: MapPin },
+        { id: "Tamil Nadu", label: "Tamil Nadu", desc: "South India", icon: MapPin },
+        { id: "Telangana", label: "Telangana", desc: "South India", icon: MapPin },
+        { id: "Gujarat", label: "Gujarat", desc: "West India", icon: MapPin },
+        { id: "Rajasthan", label: "Rajasthan", desc: "West India", icon: MapPin },
+        { id: "Madhya Pradesh", label: "Madhya Pradesh", desc: "Central India", icon: MapPin },
+        { id: "West Bengal", label: "West Bengal", desc: "East India", icon: MapPin },
+        { id: "Bihar", label: "Bihar", desc: "East India", icon: MapPin },
+        { id: "Odisha", label: "Odisha", desc: "East India", icon: MapPin },
+        { id: "Andhra Pradesh", label: "Andhra Pradesh", desc: "South India", icon: MapPin },
+        { id: "Kerala", label: "Kerala", desc: "South India", icon: MapPin },
+        { id: "Punjab", label: "Punjab", desc: "North India", icon: MapPin },
+        { id: "Haryana", label: "Haryana", desc: "North India", icon: MapPin },
+        { id: "Uttarakhand", label: "Uttarakhand", desc: "North India", icon: MapPin },
+        { id: "Jharkhand", label: "Jharkhand", desc: "East India", icon: MapPin },
+        { id: "Assam", label: "Assam", desc: "North East", icon: MapPin },
+        { id: "Chhattisgarh", label: "Chhattisgarh", desc: "Central India", icon: MapPin },
+        { id: "Himachal Pradesh", label: "Himachal Pradesh", desc: "North India", icon: MapPin },
+        { id: "Goa", label: "Goa", desc: "West India", icon: MapPin },
       ]
     }
   ];
@@ -64,47 +97,20 @@ export default function QuizPage() {
 
     if (newState.step === steps.length) {
       setLoading(true);
-      // Simulate API call & logic
-      setTimeout(async () => {
-        const allColleges = await getFallbackColleges();
-        
-        let pool = allColleges;
-        
-        if (newState.type !== "ANY") {
-          if (newState.type === "NIT") {
-            pool = pool.filter(c => c.type === "NIT" || c.type === "IIIT");
-          } else {
-            pool = pool.filter(c => c.type === newState.type);
-          }
-        }
-
-        if (newState.budget !== "ANY") {
-          if (newState.budget === "LOW") pool = pool.filter(c => c.annualFees <= 200000);
-          if (newState.budget === "MED") pool = pool.filter(c => c.annualFees > 200000 && c.annualFees <= 500000);
-          if (newState.budget === "HIGH") pool = pool.filter(c => c.annualFees > 500000);
-        }
-
-        // Region logic (simplified mapping)
-        if (newState.region !== "ANY") {
-          const northStates = ["Delhi", "Uttar Pradesh", "Punjab", "Haryana", "Uttarakhand"];
-          const southStates = ["Tamil Nadu", "Karnataka", "Kerala", "Telangana", "Andhra Pradesh"];
-          const westStates = ["Maharashtra", "Gujarat", "Madhya Pradesh", "Rajasthan"];
-          
-          if (newState.region === "NORTH") pool = pool.filter(c => northStates.some(s => c.state.includes(s)));
-          if (newState.region === "SOUTH") pool = pool.filter(c => southStates.some(s => c.state.includes(s)));
-          if (newState.region === "WEST") pool = pool.filter(c => westStates.some(s => c.state.includes(s)));
-        }
-
-        // Sort by rating to get top 3
-        pool.sort((a, b) => b.rating - a.rating);
+      try {
+        const pool = await fetchMatchedColleges(newState);
         setResults(pool.slice(0, 3));
+      } catch {
+        const pool = filterFallbackColleges(newState);
+        setResults(pool.slice(0, 3));
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     }
   };
 
   const reset = () => {
-    setState({ step: 0, type: null, budget: null, region: null, difficulty: null });
+    setState({ step: 0, type: null, budget: null, state: null, degree: null, difficulty: null });
     setResults(null);
   };
 
@@ -234,3 +240,73 @@ export default function QuizPage() {
     </div>
   );
 }
+
+const filterByState = (colleges: any[], state: string | null) => {
+  if (!state || state === "ANY") return colleges;
+  return colleges.filter((c) => String(c.state ?? "").includes(state));
+};
+
+const filterByType = (colleges: any[], type: string | null) => {
+  if (!type || type === "ANY") return colleges;
+  if (type === "NIT") return colleges.filter((c) => c.type === "NIT" || c.type === "IIIT");
+  return colleges.filter((c) => c.type === type);
+};
+
+const filterByBudget = (colleges: any[], budget: string | null) => {
+  if (!budget || budget === "ANY") return colleges;
+  if (budget === "LOW") return colleges.filter((c) => c.annualFees <= 200000);
+  if (budget === "MED") return colleges.filter((c) => c.annualFees > 200000 && c.annualFees <= 500000);
+  if (budget === "HIGH") return colleges.filter((c) => c.annualFees > 500000);
+  return colleges;
+};
+
+const filterByDegree = (colleges: any[], degree: string | null) => {
+  if (!degree || degree === "ANY") return colleges;
+  return colleges.filter((c) => Array.isArray(c.courses) && c.courses.some((course: any) => String(course.degree ?? "").includes(degree)));
+};
+
+const fetchMatchedColleges = async (state: QuizState) => {
+  const params = new URLSearchParams();
+  params.set("sortBy", "rating");
+  params.set("order", "desc");
+  params.set("limit", "50");
+
+  if (state.type && state.type !== "ANY" && state.type !== "NIT") {
+    params.set("type", state.type);
+  }
+
+  if (state.budget && state.budget !== "ANY") {
+    if (state.budget === "LOW") params.set("maxFees", "200000");
+    if (state.budget === "MED") {
+      params.set("minFees", "200001");
+      params.set("maxFees", "500000");
+    }
+    if (state.budget === "HIGH") params.set("minFees", "500001");
+  }
+
+  if (state.degree && state.degree !== "ANY") {
+    params.set("degree", state.degree);
+  }
+
+  if (state.state && state.state !== "ANY") {
+    params.set("state", state.state);
+  }
+
+  const res = await fetch(`/api/colleges?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch colleges");
+  const data = await res.json();
+  const colleges = Array.isArray(data?.colleges) ? data.colleges : [];
+  const withType = filterByType(colleges, state.type);
+  const withBudget = filterByBudget(withType, state.budget);
+  const withDegree = filterByDegree(withBudget, state.degree);
+  const withState = filterByState(withDegree, state.state);
+  return withState.sort((a, b) => b.rating - a.rating);
+};
+
+const filterFallbackColleges = (state: QuizState) => {
+  const withType = filterByType(fallbackColleges, state.type);
+  const withBudget = filterByBudget(withType, state.budget);
+  const withDegree = filterByDegree(withBudget, state.degree);
+  const withState = filterByState(withDegree, state.state);
+  return withState.sort((a, b) => b.rating - a.rating);
+};

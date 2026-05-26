@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useCompare } from "@/hooks/useCompare";
 import { CollegeSelector } from "@/components/compare/CollegeSelector";
 import { CompareTable } from "@/components/compare/CompareTable";
+import { BackButton } from "@/components/ui/BackButton";
 import { Scale, Save, Share2, Link2, CheckCircle, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -17,7 +18,7 @@ type College = {
   totalReviews: number; nirf: number | null;
   gradientFrom?: string; gradientTo?: string;
   placements: { avgPackage: number; highestPackage: number; medianPackage: number; placementPercent: number } | null;
-  courses: { name: string; degree: string }[];
+  courses: { name: string; degree: string; totalSeats?: number }[];
 };
 
 export default function ComparePage() {
@@ -33,7 +34,7 @@ export default function ComparePage() {
     const idsParam = new URLSearchParams(window.location.search).get("ids");
     if (!idsParam || compareIds.length) return;
 
-    const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean).slice(0, 3);
+    const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean).slice(0, 5);
     if (!ids.length) return;
 
     fetch(`/api/colleges/compare?ids=${ids.join(",")}`)
@@ -93,12 +94,17 @@ export default function ComparePage() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       {/* Header */}
       <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-label-caps text-label-caps uppercase tracking-widest text-primary mb-2">Analysis Tool</p>
-          <h1 className="font-display-xl text-[48px] sm:text-[64px] text-on-surface">
-            Institutional Comparison
-          </h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">Side-by-side surgical analysis to help you decide.</p>
+        <div className="flex items-start gap-4">
+          <div className="mt-2">
+            <BackButton fallback="/" />
+          </div>
+          <div>
+            <p className="font-label-caps text-label-caps uppercase tracking-widest text-primary mb-2">Analysis Tool</p>
+            <h1 className="font-display-xl text-[48px] sm:text-[64px] text-on-surface">
+              Institutional Comparison
+            </h1>
+            <p className="font-body-lg text-body-lg text-on-surface-variant">Side-by-side surgical analysis to help you decide.</p>
+          </div>
         </div>
         {compareIds.length > 0 && (
           <div className="flex gap-2">
@@ -128,11 +134,11 @@ export default function ComparePage() {
 
       {/* Visual comparison cards */}
       {colleges.length >= 2 && !loading && (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in-up">
+        <div className="mb-8 flex overflow-x-auto snap-x gap-4 pb-4 scrollbar-hide animate-fade-in-up">
           {colleges.map((c) => {
             const imgUrl = getCollegeImage(c.slug ?? "");
             return (
-              <div key={c.id} className="group overflow-hidden rounded-[2rem] glass-card ring-1 ring-white/[0.06] relative">
+              <div key={c.id} className="group overflow-hidden rounded-[2rem] glass-card ring-1 ring-white/[0.06] relative shrink-0 snap-start w-[280px] sm:w-[320px]">
                 <div className="relative h-32 overflow-hidden">
                   {imgUrl ? (
                     <>
@@ -213,9 +219,15 @@ export default function ComparePage() {
             </div>
           </div>
           <h3 className="font-headline-md text-[24px] text-on-surface mb-2">No colleges selected</h3>
-          <p className="font-body-md text-on-surface-variant max-w-sm">Add up to 3 colleges above to start comparing their academic, financial, and atmospheric data points.</p>
+          <p className="font-body-md text-on-surface-variant max-w-sm">Add up to 5 colleges above to start comparing their academic, financial, and atmospheric data points.</p>
         </div>
-      ) : <CompareTable colleges={colleges} />}
+      ) : (
+        <div className="overflow-x-auto pb-4 scrollbar-hide">
+          <div className="min-w-[800px]">
+            <CompareTable colleges={colleges} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
